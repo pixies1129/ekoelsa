@@ -133,6 +133,34 @@
     </div>
   </div>
 
+  <!-- 에너지지킴이 서약 모달 (신규 추가) -->
+  <div id="pledge-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
+      <h2 class="text-lg font-bold text-center text-green-700 mb-4 flex items-center justify-center">
+        <i data-lucide="shield-check" class="mr-2"></i> 에너지지킴이 행동 서약
+      </h2>
+      <p class="text-xs text-gray-500 text-center mb-5">아래 항목들에 모두 체크하여<br/>에너지지킴이로 활동할 것을 서약해주세요.</p>
+      
+      <div class="space-y-3 mb-6 text-sm text-gray-700">
+        <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
+          <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
+          <span class="flex-1 leading-snug">나는 사용하지 않는 전자기기의 플러그를 뽑겠습니다.</span>
+        </label>
+        <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
+          <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
+          <span class="flex-1 leading-snug">나는 점심시간 및 퇴근 시 조명과 PC를 끄겠습니다.</span>
+        </label>
+        <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
+          <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
+          <span class="flex-1 leading-snug">나는 적정 실내온도(여름 26도, 겨울 20도)를 준수하겠습니다.</span>
+        </label>
+      </div>
+      
+      <button onclick="submitPledge()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 mb-2 transition-colors shadow-md">서약 완료하기 (+50P)</button>
+      <button onclick="closePledgeModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">닫기</button>
+    </div>
+  </div>
+
   <script>
     // [중요] 구글 스프레드시트 웹앱 URL을 이곳에 넣으세요!
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5fEPvThz23GTA6RIgRIjswA2H2F7Sho6MPPne9JV4ditopWlEF1x4WaCIpO-pnhst/exec';
@@ -153,6 +181,7 @@
     let savedSteps = parseInt(localStorage.getItem('eko_steps')) || 0;
     let savedCarbon = parseFloat(localStorage.getItem('eko_carbon')) || 0;
     let savedChar = localStorage.getItem('eko_charType') || 'type1';
+    let savedPledge = localStorage.getItem('eko_pledgeCompleted') === 'true'; // 서약 완료 여부
 
     let state = {
       activeTab: 'home',
@@ -160,6 +189,7 @@
       steps: savedSteps,
       carbonSaved: savedCarbon,
       charType: savedChar,
+      pledgeCompleted: savedPledge,
       leaderboard: [
         { id: 2, name: savedName ? savedName + ' (나)' : '이름없음 (나)', points: savedPoints, steps: savedSteps, carbon: savedCarbon }
       ],
@@ -173,6 +203,7 @@
       localStorage.setItem('eko_steps', state.steps);
       localStorage.setItem('eko_carbon', state.carbonSaved);
       localStorage.setItem('eko_charType', state.charType);
+      localStorage.setItem('eko_pledgeCompleted', state.pledgeCompleted);
       localStorage.setItem('eko_pendingApprovals', JSON.stringify(state.pendingApprovals));
       localStorage.setItem('eko_todayMissions', JSON.stringify(state.todayMissions));
     }
@@ -212,6 +243,44 @@
       render();
     };
 
+    // --- Energy Guardian Pledge (서약 로직) ---
+    window.openPledgeModal = function() {
+      if (state.pledgeCompleted) {
+        alert("이미 서약을 완료하셨습니다.");
+        return;
+      }
+      // 체크박스 초기화
+      document.querySelectorAll('.pledge-checkbox').forEach(cb => cb.checked = false);
+      document.getElementById('pledge-modal').classList.remove('hidden');
+      document.getElementById('pledge-modal').classList.add('flex');
+    };
+
+    window.closePledgeModal = function() {
+      document.getElementById('pledge-modal').classList.add('hidden');
+      document.getElementById('pledge-modal').classList.remove('flex');
+    };
+
+    window.submitPledge = function() {
+      const checkboxes = document.querySelectorAll('.pledge-checkbox');
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      
+      if (!allChecked) {
+        alert("모든 행동 서약 항목에 체크해주세요.");
+        return;
+      }
+      
+      // 서약은 관리자 승인 없이 즉시 적용 및 1회성 마감
+      state.pledgeCompleted = true;
+      state.points += 50;
+      state.carbonSaved = +(state.carbonSaved + 1.0).toFixed(3);
+      updateLeaderboard();
+      saveState();
+      
+      closePledgeModal();
+      alert("에너지지킴이 서약이 완료되었습니다!\n50P 획득 및 1.0kg 탄소 절감 효과가 적용되었습니다.");
+      render();
+    };
+
     // --- Growth Logic ---
     function getLevelInfo(currentPoints, type) {
       const types = {
@@ -221,9 +290,9 @@
       };
       const emojis = types[type] || types.type1;
 
-      if (currentPoints < 100) return { level: 1, emoji: emojis.l1, max: 100, color: 'text-green-400' };
-      if (currentPoints < 300) return { level: 2, emoji: emojis.l2, max: 300, color: 'text-blue-400' };
-      if (currentPoints < 600) return { level: 3, emoji: emojis.l3, max: 600, color: 'text-indigo-500' };
+      if (currentPoints < 100) return { level: 1, name: '1단계', emoji: emojis.l1, max: 100, color: 'text-green-400' };
+      if (currentPoints < 300) return { level: 2, name: '2단계', emoji: emojis.l2, max: 300, color: 'text-blue-400' };
+      if (currentPoints < 600) return { level: 3, name: '3단계', emoji: emojis.l3, max: 600, color: 'text-indigo-500' };
       return { level: 4, name: '성장완료', emoji: emojis.l4, max: 600, color: 'text-gray-800' };
     }
 
@@ -495,6 +564,39 @@
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
             </div>
             <button onclick="handleTextMission('m4', '페이퍼리스', 30, 0.029)" class="w-full bg-purple-50 text-purple-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="message-square" class="mr-2 w-4 h-4"></i> 내용 입력 인증</button>
+          </div>
+
+          <!-- 미션 카드 5 (줍깅/플로깅) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="recycle" class="text-teal-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">줍깅/플로깅 참여</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
+            </div>
+            <button onclick="triggerCamera('m5', '줍깅/플로깅 참여', 30, 0.5)" class="w-full bg-teal-50 text-teal-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
+          </div>
+
+          <!-- 미션 카드 6 (자전거 이용) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-cyan-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bike" class="text-cyan-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">자전거 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
+            </div>
+            <button onclick="triggerCamera('m6', '자전거 이용', 25, 0.5)" class="w-full bg-cyan-50 text-cyan-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
+          </div>
+
+          <!-- 미션 카드 7 (함께하는 에너지지킴이 서약) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="shield-check" class="text-rose-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">에너지지킴이 인증 <span class="font-normal text-gray-400 text-[10px]">(1회성)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 1.0kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+50P</div>
+            </div>
+            ${state.pledgeCompleted ? 
+              `<button disabled class="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="check-circle" class="mr-2 w-4 h-4"></i> 참여 완료</button>` : 
+              `<button onclick="openPledgeModal()" class="w-full bg-rose-50 text-rose-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center hover:bg-rose-100 transition-colors"><i data-lucide="check-square" class="mr-2 w-4 h-4"></i> 서약하기</button>`
+            }
           </div>
         </div>
       `;
