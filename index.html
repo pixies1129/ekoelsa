@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA 색상 설정 -->
+  <meta name="theme-color" content="#16a34a">
+  <title>EKO-ELSA - 인천서부지사</title>
+  
+  <!-- PWA Manifest 연결 -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- ✅ [추가] 아이폰(iOS) PWA 설치 지원 메타태그 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="EKO-ELSA">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- 커스텀 애니메이션 스타일 -->
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    @keyframes bounce-slow {
+      0%, 100% { transform: translateY(-5%); }
+      50% { transform: translateY(0); }
+    }
+    .animate-bounce-slow {
+      animation: bounce-slow 2s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 flex justify-center font-sans text-gray-800">
+
+  <!-- 앱 컨테이너 -->
+  <div class="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col">
+    
+    <!-- 헤더 영역 -->
+    <header class="bg-white pt-12 pb-4 px-6 sticky top-0 z-10 border-b border-gray-100">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-extrabold text-green-700 tracking-tight flex items-center">
+            <i data-lucide="leaf" class="mr-2 w-6 h-6"></i>
+            EKO-ELSA
+          </h1>
+          <p class="text-xs text-gray-500 mt-1">인천서부지사</p>
+        </div>
+        <!-- 우측 상단 로고 -->
+        <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" class="h-8 object-contain" referrerpolicy="no-referrer" />
+      </div>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 (JS로 화면이 교체되는 곳) -->
+    <main id="app-content" class="flex-1 overflow-y-auto pb-24"></main>
+
+    <!-- 하단 네비게이션 바 -->
+    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-3 flex justify-between pb-8">
+      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center flex-1 transition-colors text-gray-400">
+        <i data-lucide="home" class="w-6 h-6"></i>
+        <span class="text-[10px] mt-1 font-medium">마이룸</span>
+      </button>
+      <button onclick="switchTab('missions')" id="nav-missions" class="flex flex-col items-center flex-1 transition-colors text-green-600">
+        <i data-lucide="list-todo" class="w-6 h-6"></i>
+        <span class="text-[10px] mt-1 font-medium">미션</span>
+      </button>
+      <button onclick="switchTab('forest')" id="nav-forest" class="flex flex-col items-center flex-1 transition-colors text-gray-400">
+        <i data-lucide="users" class="w-6 h-6"></i>
+        <span class="text-[10px] mt-1 font-medium">지사 숲/랭킹</span>
+      </button>
+    </nav>
+    
+    <!-- 숨겨진 카메라 파일 입력창 -->
+    <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoUpload(event)" />
+  </div>
+
+  <!-- 사용자 이름 입력 모달 (최초 실행 시) -->
+  <div id="onboarding-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
+      <div class="flex justify-center mb-4"><span class="text-5xl">🌱</span></div>
+      <h2 class="text-xl font-bold text-center text-gray-800 mb-2">환영합니다!</h2>
+      <p class="text-sm text-gray-500 text-center mb-6">EKO-ELSA에서 사용할 이름을 입력해주세요.</p>
+      <input type="text" id="username-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all" placeholder="이름 입력 (예: 홍길동)" />
+      <button onclick="saveUserName()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl transition-colors">시작하기</button>
+    </div>
+  </div>
+
+  <!-- 건강 앱 동기화 로딩 오버레이 -->
+  <div id="sync-loading" class="fixed inset-0 bg-white/80 z-50 items-center justify-center hidden backdrop-blur-sm">
+    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+      <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
+      <p class="font-bold text-gray-800">건강 데이터 동기화 중...</p>
+      <p class="text-xs text-gray-500 mt-1">Samsung Health / Apple Health 연결 중</p>
+    </div>
+  </div>
+
+  <!-- Javascript 로직 -->
+  <script>
+    // --- ✅ PWA Service Worker 등록 ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => console.log('ServiceWorker 등록 성공'))
+          .catch(err => console.log('ServiceWorker 등록 실패: ', err));
+      });
+    }
+
+    // --- State (상태 관리) ---
+    function getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    }
+
+    let savedName = localStorage.getItem('eko_userName') || '';
+    
+    let state = {
+      activeTab: 'missions',
+      points: 150,
+      steps: 12000,
+      carbonSaved: 1.76,
+      leaderboard: [
+        { id: 1, name: '김승강 (지사장)', points: 650, level: 4, steps: 45000, carbon: 6.6 },
+        { id: 2, name: savedName ? savedName + ' (나)' : '이안전 (나)', points: 150, level: 2, steps: 12000, carbon: 1.76 },
+        { id: 3, name: '박검사', points: 420, level: 3, steps: 31000, carbon: 4.5 },
+        { id: 4, name: '최기술', points: 280, level: 2, steps: 25000, carbon: 3.6 },
+        { id: 5, name: '정행정', points: 90, level: 1, steps: 8000, carbon: 1.1 },
+      ],
+      pendingMission: null,
+      pendingApprovals: JSON.parse(localStorage.getItem('eko_pendingApprovals')) || [],
+      todayMissions: JSON.parse(localStorage.getItem('eko_todayMissions')) || {}
+    };
+
+    function saveState() {
+      localStorage.setItem('eko_pendingApprovals', JSON.stringify(state.pendingApprovals));
+      localStorage.setItem('eko_todayMissions', JSON.stringify(state.todayMissions));
+    }
+
+    // --- Onboarding Logic ---
+    window.checkOnboarding = function() {
+      if (!savedName) {
+        document.getElementById('onboarding-modal').classList.remove('hidden');
+        document.getElementById('onboarding-modal').classList.add('flex');
+      }
+    };
+
+    window.saveUserName = function() {
+      const nameInput = document.getElementById('username-input').value.trim();
+      if (nameInput) {
+        localStorage.setItem('eko_userName', nameInput);
+        savedName = nameInput;
+        state.leaderboard.find(u => u.id === 2).name = nameInput + ' (나)';
+        
+        document.getElementById('onboarding-modal').classList.add('hidden');
+        document.getElementById('onboarding-modal').classList.remove('flex');
+        render();
+      } else {
+        alert('이름을 입력해주세요.');
+      }
+    };
+
+    // --- Growth Logic ---
+    function getLevelInfo(currentPoints) {
+      if (currentPoints < 100) return { level: 1, name: '1단계', emoji: '🌱', max: 100, color: 'text-green-400' };
+      if (currentPoints < 300) return { level: 2, name: '2단계', emoji: '🌿', max: 300, color: 'text-green-500' };
+      if (currentPoints < 600) return { level: 3, name: '3단계', emoji: '🪴', max: 600, color: 'text-emerald-600' };
+      return { level: 4, name: '나무', emoji: '🌳', max: 600, color: 'text-emerald-800' };
+    }
+
+    function getProgressPercent() {
+      const levelInfo = getLevelInfo(state.points);
+      if (levelInfo.level === 4) return 100;
+      let base = 0;
+      if (levelInfo.level === 2) base = 100;
+      if (levelInfo.level === 3) base = 300;
+      
+      const currentLevelPoints = state.points - base;
+      const levelRange = levelInfo.max - base;
+      return Math.min(100, Math.max(0, (currentLevelPoints / levelRange) * 100));
+    }
+
+    // --- Actions ---
+    window.switchTab = function(tab) {
+      state.activeTab = tab;
+      
+      document.getElementById('nav-home').className = `flex flex-col items-center flex-1 transition-colors ${tab === 'home' ? 'text-green-600' : 'text-gray-400'}`;
+      document.getElementById('nav-missions').className = `flex flex-col items-center flex-1 transition-colors ${tab === 'missions' ? 'text-green-600' : 'text-gray-400'}`;
+      document.getElementById('nav-forest').className = `flex flex-col items-center flex-1 transition-colors ${tab === 'forest' ? 'text-green-600' : 'text-gray-400'}`;
+      
+      render();
+    };
+
+    window.handleSyncSteps = function() {
+      const syncLoading = document.getElementById('sync-loading');
+      syncLoading.classList.remove('hidden');
+      syncLoading.classList.add('flex');
+
+      setTimeout(() => {
+        syncLoading.classList.add('hidden');
+        syncLoading.classList.remove('flex');
+
+        const addedSteps = Math.floor(Math.random() * 1000) + 500;
+        const earnedPoints = Math.floor(addedSteps / 100); 
+        const savedCarbon = +(addedSteps * 0.000147).toFixed(3); 
+
+        state.steps += addedSteps;
+        state.points += earnedPoints;
+        state.carbonSaved = +(state.carbonSaved + savedCarbon).toFixed(3);
+        updateLeaderboard(earnedPoints, addedSteps, savedCarbon);
+        
+        alert(`동기화 성공! 걸음 수 ${addedSteps}보가 추가되었습니다.`);
+        render();
+      }, 1500);
+    };
+
+    window.requestMission = function(missionId, title, points, carbon) {
+      if (state.todayMissions[missionId] === getTodayStr()) {
+        alert('이미 오늘 승인 요청을 완료한 미션입니다. 내일 다시 참여해주세요.');
+        return false;
+      }
+      return true;
+    };
+
+    function updateLeaderboard(earnedPoints, addedSteps, earnedCarbon) {
+      state.leaderboard = state.leaderboard.map(user => {
+        if (user.id === 2) {
+          const newPoints = user.points + earnedPoints;
+          return { 
+            ...user, 
+            points: newPoints, 
+            steps: user.steps + addedSteps, 
+            carbon: +(user.carbon + earnedCarbon).toFixed(3),
+            level: getLevelInfo(newPoints).level 
+          };
+        }
+        return user;
+      }).sort((a, b) => b.points - a.points);
+    }
+
+    window.triggerCamera = function(missionId, title, points, carbon) {
+      if (!requestMission(missionId, title, points, carbon)) return;
+      state.pendingMission = { missionId, title, points, carbon };
+      document.getElementById('camera-input').click();
+    };
+
+    window.handlePhotoUpload = function(event) {
+      const file = event.target.files[0];
+      if (file && state.pendingMission) {
+        submitToAdmin(state.pendingMission);
+        event.target.value = '';
+        state.pendingMission = null;
+      }
+    };
+
+    window.handleTextMission = function(missionId, title, points, carbon) {
+      if (!requestMission(missionId, title, points, carbon)) return;
+      
+      const text = prompt('어떤 페이퍼리스 활동을 하셨나요?\n(예: 태블릿으로 회의 참석, 이면지 사용 등)'); 
+      if(text && text.trim().length > 0) { 
+        submitToAdmin({ missionId, title, points, carbon, content: text });
+      } else if (text !== null) {
+        alert('내용을 입력해야 인증이 완료됩니다.');
+      }
+    };
+
+    function submitToAdmin(missionData) {
+      state.pendingApprovals.push({
+        id: Date.now(),
+        userId: 2,
+        userName: savedName + ' (나)',
+        ...missionData
+      });
+      state.todayMissions[missionData.missionId] = getTodayStr();
+      saveState();
+      alert('관리자에게 승인 요청이 전송되었습니다. 승인 후 포인트가 지급됩니다.');
+      render();
+    }
+
+    // --- Admin Actions ---
+    window.approveMission = function(reqId) {
+      const reqIndex = state.pendingApprovals.findIndex(r => r.id === reqId);
+      if (reqIndex > -1) {
+        const req = state.pendingApprovals[reqIndex];
+        state.points += req.points;
+        state.carbonSaved = +(state.carbonSaved + req.carbon).toFixed(3);
+        updateLeaderboard(req.points, 0, req.carbon);
+        
+        state.pendingApprovals.splice(reqIndex, 1);
+        saveState();
+        alert(`[${req.title}] 미션이 승인되었습니다!`);
+        render();
+      }
+    };
+
+    window.rejectMission = function(reqId) {
+      const reqIndex = state.pendingApprovals.findIndex(r => r.id === reqId);
+      if (reqIndex > -1) {
+        const req = state.pendingApprovals[reqIndex];
+        state.pendingApprovals.splice(reqIndex, 1);
+        delete state.todayMissions[req.missionId];
+        saveState();
+        alert(`[${req.title}] 미션이 반려되었습니다.`);
+        render();
+      }
+    };
+
+    // --- Render Functions ---
+    function renderHome() {
+      const levelInfo = getLevelInfo(state.points);
+      const percent = getProgressPercent();
+
+      return `
+        <div class="flex flex-col items-center p-6 space-y-6 animate-in">
+          <div class="w-full bg-white rounded-2xl p-6 shadow-sm border border-green-100 flex flex-col items-center">
+            <h2 class="text-lg font-bold text-gray-700 mb-2">내 캐릭터</h2>
+            
+            <div class="relative w-40 h-40 bg-white flex items-center justify-center mb-4 border-2 border-dashed border-gray-200 rounded-lg">
+              <span class="text-7xl">
+                ${levelInfo.emoji}
+              </span>
+              ${levelInfo.level === 4 ? `
+                <div class="absolute -top-3 -right-3 bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded-full shadow flex items-center">
+                  <i data-lucide="award" class="mr-1 w-3 h-3"></i> 성장 완료!
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="text-center w-full">
+              <div class="flex justify-between items-end mb-1">
+                <span class="font-bold text-xl ${levelInfo.color}">Lv.${levelInfo.level} ${levelInfo.name}</span>
+                <span class="text-sm text-gray-500">${state.points} / ${levelInfo.level === 4 ? 'MAX' : `${levelInfo.max} P`}</span>
+              </div>
+              <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500 transition-all duration-1000 ease-out" style="width: ${percent}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full grid grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center">
+              <i data-lucide="footprints" class="text-blue-500 mb-2 w-7 h-7"></i>
+              <span class="text-sm text-gray-500">오늘의 걸음</span>
+              <span class="text-xl font-bold text-gray-800">${state.steps.toLocaleString()}보</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center">
+              <i data-lucide="leaf" class="text-green-500 mb-2 w-7 h-7"></i>
+              <span class="text-sm text-gray-500">누적 탄소절감</span>
+              <span class="text-xl font-bold text-gray-800">${state.carbonSaved} kg</span>
+            </div>
+          </div>
+
+          <button onclick="handleSyncSteps()" class="w-full py-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-2xl font-bold shadow-md transition-colors flex justify-center items-center">
+            <i data-lucide="footprints" class="mr-2 w-5 h-5"></i>
+            스마트폰 걸음 수 동기화
+          </button>
+          <p class="text-xs text-gray-400 text-center">Samsung Health / Apple Health 연동 (API 시뮬레이션)</p>
+        </div>
+      `;
+    }
+
+    function renderMissions() {
+      let adminHtml = '';
+      if (state.pendingApprovals.length > 0) {
+        const listHtml = state.pendingApprovals.map(req => `
+          <div class="flex items-center justify-between p-3 border-b border-gray-100 last:border-0">
+            <div>
+              <div class="font-bold text-sm text-gray-800">${req.userName}</div>
+              <div class="text-xs text-gray-500">${req.title} <span class="text-green-600 font-bold ml-1">+${req.points}P</span></div>
+              ${req.content ? `<div class="text-[10px] text-gray-400 mt-1 bg-gray-50 p-1 rounded">"${req.content}"</div>` : ''}
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="rejectMission(${req.id})" class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded border border-red-100 font-bold">반려</button>
+              <button onclick="approveMission(${req.id})" class="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200 font-bold">승인</button>
+            </div>
+          </div>
+        `).join('');
+
+        adminHtml = `
+          <div class="bg-red-50 rounded-2xl p-4 shadow-sm border border-red-100 mb-6 animate-in">
+            <h3 class="font-bold text-red-700 text-sm mb-3 flex items-center">
+              <i data-lucide="shield-check" class="w-4 h-4 mr-1"></i> 관리자 승인 대기함 (${state.pendingApprovals.length}건)
+            </h3>
+            <div class="bg-white rounded-xl overflow-hidden border border-red-50">
+              ${listHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="p-6 space-y-4 animate-in">
+          ${adminHtml}
+          
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i data-lucide="list-todo" class="mr-2 text-green-600 w-6 h-6"></i>
+            생활 미션
+          </h2>
+          
+          <!-- 미션 1 -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mr-3">
+                  <i data-lucide="footprints" class="text-blue-500 w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-gray-800 text-sm">승강기 대신 계단 이용</h3>
+                  <p class="text-[10px] text-gray-500 mt-0.5">실제 절감량: 약 0.032kg (3개 층)</p>
+                </div>
+              </div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">+20P</div>
+            </div>
+            <button onclick="triggerCamera('m1', '승강기 대신 계단 이용', 20, 0.032)" class="w-full bg-blue-50 text-blue-600 py-2.5 rounded-xl text-sm font-bold border border-blue-100 hover:bg-blue-100 transition-colors flex justify-center items-center">
+              <i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진으로 인증하기
+            </button>
+          </div>
+
+          <!-- 미션 2 -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mr-3">
+                  <i data-lucide="bus" class="text-indigo-500 w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-gray-800 text-sm">대중교통 이용</h3>
+                  <p class="text-[10px] text-gray-500 mt-0.5">실제 절감량: 약 1.0kg (1회)</p>
+                </div>
+              </div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">+25P</div>
+            </div>
+            <button onclick="triggerCamera('m2', '대중교통 이용', 25, 1.0)" class="w-full bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-bold border border-indigo-100 hover:bg-indigo-100 transition-colors flex justify-center items-center">
+              <i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진으로 인증하기
+            </button>
+          </div>
+
+          <!-- 미션 3 -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mr-3">
+                  <i data-lucide="coffee" class="text-orange-500 w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-gray-800 text-sm">다회용컵 이용</h3>
+                  <p class="text-[10px] text-gray-500 mt-0.5">실제 절감량: 약 0.05kg (1개)</p>
+                </div>
+              </div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">+15P</div>
+            </div>
+            <button onclick="triggerCamera('m3', '다회용컵 이용', 15, 0.05)" class="w-full bg-orange-50 text-orange-600 py-2.5 rounded-xl text-sm font-bold border border-orange-100 hover:bg-orange-100 transition-colors flex justify-center items-center">
+              <i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진으로 인증하기
+            </button>
+          </div>
+
+          <!-- 미션 4 -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center mr-3">
+                  <i data-lucide="file-text" class="text-purple-500 w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-gray-800 text-sm">페이퍼리스 활동</h3>
+                  <p class="text-[10px] text-gray-500 mt-0.5">실제 절감량: 약 0.029kg (10장)</p>
+                </div>
+              </div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">+30P</div>
+            </div>
+            <button onclick="handleTextMission('m4', '페이퍼리스 활동', 30, 0.029)" class="w-full bg-purple-50 text-purple-600 py-2.5 rounded-xl text-sm font-bold border border-purple-100 hover:bg-purple-100 transition-colors flex justify-center items-center">
+              <i data-lucide="message-square" class="mr-2 w-4 h-4"></i> 내용 입력하여 인증하기
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderForest() {
+      const totalCarbon = state.leaderboard.reduce((sum, user) => sum + (user.carbon || 0), 0);
+      const equivalentTrees = (totalCarbon / 6.6).toFixed(1);
+
+      let leaderboardHtml = state.leaderboard.map((user, index) => {
+        const badgeColor = index === 0 ? 'bg-yellow-100 text-yellow-700' : index === 1 ? 'bg-gray-100 text-gray-700' : index === 2 ? 'bg-amber-100 text-amber-700' : 'text-gray-400';
+        const isMe = user.id === 2;
+        
+        return `
+          <div class="flex items-center justify-between p-4 border-b last:border-0 ${isMe ? 'bg-green-50' : ''}">
+            <div class="flex items-center">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${badgeColor}">
+                ${index + 1}
+              </div>
+              <div>
+                <div class="font-bold text-gray-800 flex items-center">
+                  ${user.name} 
+                  ${isMe ? '<span class="ml-2 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">나</span>' : ''}
+                </div>
+                <div class="text-xs text-gray-500">${user.steps.toLocaleString()}보</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-green-600">${user.points}P</div>
+              <div class="text-lg">${getLevelInfo(user.points).emoji}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (state.leaderboard.length === 0) {
+        leaderboardHtml = '<div class="p-8 text-center text-gray-400 text-sm">등록된 지사원이 없습니다.</div>';
+      }
+
+      return `
+        <div class="p-6 space-y-6 animate-in">
+          
+          <div class="bg-green-50 rounded-2xl p-5 shadow-sm border border-green-200 flex items-center justify-between">
+            <div>
+              <h2 class="font-extrabold text-green-800 text-lg mb-1">실제 나무 심기 효과</h2>
+              <p class="text-[10px] text-green-600">국립산림과학원 기준 (소나무 1그루 6.6kg/년 흡수)</p>
+              <p class="text-xs text-gray-600 mt-2">지사 총 탄소절감: ${totalCarbon.toFixed(1)}kg</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="text-4xl mb-1">🌲</span>
+              <span class="font-extrabold text-xl text-green-700 bg-white px-3 py-1 rounded-full shadow-sm">
+                약 ${equivalentTrees} 그루
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                <i data-lucide="trophy" class="mr-2 text-yellow-500 w-5 h-5"></i>
+                지사원 랭킹
+              </h3>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              ${leaderboardHtml}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 메인 렌더링 함수
+    function render() {
+      const contentDiv = document.getElementById('app-content');
+      if (state.activeTab === 'home') {
+        contentDiv.innerHTML = renderHome();
+      } else if (state.activeTab === 'missions') {
+        contentDiv.innerHTML = renderMissions();
+      } else if (state.activeTab === 'forest') {
+        contentDiv.innerHTML = renderForest();
+      }
+      lucide.createIcons();
+    }
+
+    // 초기 화면 그리기
+    checkOnboarding();
+    render();
+    switchTab('missions');
+    lucide.createIcons();
+
+  </script>
+</body>
+</html>
