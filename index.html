@@ -60,13 +60,13 @@
     
     <!-- 헤더 -->
     <header class="bg-white pt-12 pb-4 px-6 sticky top-0 z-10 border-b border-gray-100">
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-2xl font-extrabold text-green-700 tracking-tight flex items-center">
-            <i data-lucide="leaf" class="mr-2 w-6 h-6"></i>
+      <div class="flex justify-between items-start">
+        <div class="pt-1">
+          <h1 class="text-2xl font-extrabold text-green-700 tracking-tight flex items-center leading-none">
+            <i data-lucide="leaf" class="mr-1.5 w-6 h-6"></i>
             EKO-ELSA
           </h1>
-          <p class="text-xs text-gray-500 mt-1">인천서부지사</p>
+          <p class="text-xs text-gray-500 mt-1.5 ml-1">인천서부지사</p>
         </div>
         <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" class="h-8 object-contain" referrerpolicy="no-referrer" />
       </div>
@@ -162,9 +162,6 @@
   </div>
 
   <script>
-    // [중요] 구글 스프레드시트 웹앱 URL을 이곳에 넣으세요!
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNdsVt3bk3zS5Q16KwzQ6kmvPheAMaUGHxCci1PrSd9n2SAkX21pgnBCZJKNuSzGKW/exec';
-
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(()=>{});
@@ -194,7 +191,6 @@
         { id: 2, name: savedName ? savedName + ' (나)' : '이름없음 (나)', points: savedPoints, steps: savedSteps, carbon: savedCarbon }
       ],
       pendingMission: null,
-      pendingApprovals: JSON.parse(localStorage.getItem('eko_pendingApprovals')) || [],
       todayMissions: JSON.parse(localStorage.getItem('eko_todayMissions')) || {}
     };
 
@@ -204,7 +200,6 @@
       localStorage.setItem('eko_carbon', state.carbonSaved);
       localStorage.setItem('eko_charType', state.charType);
       localStorage.setItem('eko_pledgeCompleted', state.pledgeCompleted);
-      localStorage.setItem('eko_pendingApprovals', JSON.stringify(state.pendingApprovals));
       localStorage.setItem('eko_todayMissions', JSON.stringify(state.todayMissions));
     }
 
@@ -222,6 +217,7 @@
         localStorage.setItem('eko_userName', nameInput);
         savedName = nameInput;
         state.leaderboard[0].name = nameInput + ' (나)';
+        document.getElementById('onboarding-modal').classList.remove('flex');
         document.getElementById('onboarding-modal').classList.add('hidden');
         render();
       } else { alert('이름을 입력해주세요.'); }
@@ -269,7 +265,6 @@
         return;
       }
       
-      // 서약은 관리자 승인 없이 즉시 적용 및 1회성 마감
       state.pledgeCompleted = true;
       state.points += 50;
       state.carbonSaved = +(state.carbonSaved + 1.0).toFixed(3);
@@ -285,22 +280,22 @@
     function getLevelInfo(currentPoints, type) {
       const types = {
         type1: { l1:'🌱', l2:'🌿', l3:'🪴', l4:'🌳' }, // 나무
-        type2: { l1:'💧', l2:'❄️', l3:'🧊', l4:'🐻‍❄️' }, // 북극곰 (물방울 -> 눈송이 -> 빙하 -> 북극곰)
-        type3: { l1:'🥚', l2:'❄️', l3:'🧊', l4:'🐧' }  // 펭귄 (알 -> 눈송이 -> 빙하 -> 펭귄)
+        type2: { l1:'💧', l2:'❄️', l3:'🧊', l4:'🐻‍❄️' }, // 북극곰 
+        type3: { l1:'🥚', l2:'❄️', l3:'🧊', l4:'🐧' }  // 펭귄 
       };
       const emojis = types[type] || types.type1;
 
-      if (currentPoints < 100) return { level: 1, name: '1단계', emoji: emojis.l1, max: 100, color: 'text-green-400' };
-      if (currentPoints < 300) return { level: 2, name: '2단계', emoji: emojis.l2, max: 300, color: 'text-blue-400' };
-      if (currentPoints < 600) return { level: 3, name: '3단계', emoji: emojis.l3, max: 600, color: 'text-indigo-500' };
-      return { level: 4, name: '성장완료', emoji: emojis.l4, max: 600, color: 'text-gray-800' };
+      if (currentPoints < 1000) return { level: 1, name: '1단계', emoji: emojis.l1, max: 1000, color: 'text-green-400' };
+      if (currentPoints < 2000) return { level: 2, name: '2단계', emoji: emojis.l2, max: 2000, color: 'text-blue-400' };
+      if (currentPoints < 3000) return { level: 3, name: '3단계', emoji: emojis.l3, max: 3000, color: 'text-indigo-500' };
+      return { level: 4, name: '성장완료', emoji: emojis.l4, max: 3000, color: 'text-gray-800' };
     }
 
     function getProgressPercent() {
       const levelInfo = getLevelInfo(state.points, state.charType);
       if (levelInfo.level === 4) return 100;
-      let base = levelInfo.level === 1 ? 0 : levelInfo.level === 2 ? 100 : 300;
-      return Math.min(100, Math.max(0, ((state.points - base) / (levelInfo.max - base)) * 100));
+      let base = (levelInfo.level - 1) * 1000;
+      return Math.min(100, Math.max(0, ((state.points - base) / 1000) * 100));
     }
 
     // --- Actions ---
@@ -335,7 +330,8 @@
 
     window.requestMission = function(missionId) {
       if (state.todayMissions[missionId] === getTodayStr()) {
-        alert('이미 오늘 승인 요청을 완료한 미션입니다. 내일 다시 참여해주세요.'); return false;
+        alert('오늘 이미 완료한 미션입니다. 내일 다시 참여해주세요.'); 
+        return false;
       }
       return true;
     };
@@ -346,22 +342,13 @@
       document.getElementById('camera-input').click();
     };
 
-    // 이미지를 Base64 텍스트로 변환 (구글 시트 전송용)
-    function getBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-      });
-    }
-
-    window.handlePhotoUpload = async function(event) {
+    // 관리자 승인 로직 제거, 사진 선택 시 즉시 미션 완료 처리
+    window.handlePhotoUpload = function(event) {
       const file = event.target.files[0];
       if (file && state.pendingMission) {
-        let base64Img = await getBase64(file);
-        submitToAdmin({...state.pendingMission, image: base64Img});
-        event.target.value = ''; state.pendingMission = null;
+        completeMission(state.pendingMission);
+        event.target.value = ''; 
+        state.pendingMission = null;
       }
     };
 
@@ -369,55 +356,21 @@
       if (!requestMission(missionId)) return;
       const text = prompt('어떤 페이퍼리스 활동을 하셨나요?\n(예: 태블릿으로 회의 참석, 이면지 사용 등)'); 
       if(text && text.trim().length > 0) { 
-        submitToAdmin({ missionId, title, points, carbon, content: text });
-      } else if (text !== null) { alert('내용을 입력해야 인증이 완료됩니다.'); }
+        completeMission({ missionId, title, points, carbon });
+      } else if (text !== null) { 
+        alert('내용을 입력해야 인증이 완료됩니다.'); 
+      }
     };
 
-    function submitToAdmin(missionData) {
-      // 1. 앱 내부 관리자 대기함에 저장
-      state.pendingApprovals.push({ id: Date.now(), userName: savedName + ' (나)', ...missionData });
+    function completeMission(missionData) {
       state.todayMissions[missionData.missionId] = getTodayStr();
+      state.points += missionData.points;
+      state.carbonSaved = +(state.carbonSaved + missionData.carbon).toFixed(3);
+      updateLeaderboard();
       saveState();
-
-      // 2. 구글 스프레드시트로 전송 (백그라운드 통신)
-      if(GOOGLE_SCRIPT_URL.startsWith('https://script.google.com')) {
-        fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors', // CORS 우회 옵션
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userName: savedName,
-            missionTitle: missionData.title,
-            content: missionData.content || '사진 인증',
-            image: missionData.image || '',
-            timestamp: new Date().toLocaleString()
-          })
-        }).catch(e => console.error('Sheet upload error', e));
-      }
-      alert('승인 요청이 전송되었습니다. (관리자 확인 후 포인트 지급)');
+      alert(`[${missionData.title}] 미션 완료!\n${missionData.points}P 및 탄소절감량 ${missionData.carbon}kg이 적립되었습니다.`);
       render();
     }
-
-    window.approveMission = function(reqId) {
-      const reqIndex = state.pendingApprovals.findIndex(r => r.id === reqId);
-      if (reqIndex > -1) {
-        const req = state.pendingApprovals[reqIndex];
-        state.points += req.points; state.carbonSaved = +(state.carbonSaved + req.carbon).toFixed(3);
-        updateLeaderboard();
-        state.pendingApprovals.splice(reqIndex, 1);
-        saveState();
-        alert(`[${req.title}] 승인완료!`); render();
-      }
-    };
-
-    window.rejectMission = function(reqId) {
-      const reqIndex = state.pendingApprovals.findIndex(r => r.id === reqId);
-      if (reqIndex > -1) {
-        delete state.todayMissions[state.pendingApprovals[reqIndex].missionId];
-        state.pendingApprovals.splice(reqIndex, 1);
-        saveState(); alert('반려되었습니다.'); render();
-      }
-    };
 
     // --- Render Functions ---
     function renderHome() {
@@ -493,99 +446,26 @@
     }
 
     function renderMissions() {
-      let adminHtml = '';
-      if (state.pendingApprovals.length > 0) {
-        const listHtml = state.pendingApprovals.map(req => `
-          <div class="flex items-center justify-between p-3 border-b border-gray-100 last:border-0">
-            <div class="flex-1 pr-2">
-              <div class="font-bold text-sm text-gray-800">${req.userName}</div>
-              <div class="text-[10px] text-gray-500">${req.title} <span class="text-green-600 font-bold ml-1">+${req.points}P</span></div>
-              ${req.content ? `<div class="text-[10px] text-gray-400 mt-1 bg-gray-50 p-1 rounded truncate">"${req.content}"</div>` : ''}
-              ${req.image ? `<div class="text-[10px] text-blue-500 mt-1">[사진 첨부됨]</div>` : ''}
-            </div>
-            <div class="flex space-x-1">
-              <button onclick="rejectMission(${req.id})" class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded border border-red-100 font-bold">반려</button>
-              <button onclick="approveMission(${req.id})" class="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200 font-bold">승인</button>
-            </div>
-          </div>
-        `).join('');
-
-        adminHtml = `
-          <div class="bg-red-50 rounded-2xl p-4 shadow-sm border border-red-100 mb-6 animate-in">
-            <h3 class="font-bold text-red-700 text-sm mb-3 flex items-center">
-              <i data-lucide="shield-check" class="w-4 h-4 mr-1"></i> 관리자 승인 (테스트용)
-            </h3>
-            <div class="bg-white rounded-xl overflow-hidden border border-red-50">
-              ${listHtml}
-            </div>
-          </div>
-        `;
-      }
+      // 렌더링 헬퍼 함수 (오늘 완료 여부에 따른 버튼 상태 변경)
+      const getActionBtn = (id, title, points, carbon, type, btnClass, textClass) => {
+        const isDone = state.todayMissions[id] === getTodayStr();
+        if (isDone) {
+          return `<button disabled class="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="check-circle" class="mr-2 w-4 h-4"></i> 오늘 참여 완료</button>`;
+        }
+        
+        const onClickFn = type === 'text' ? `handleTextMission('${id}', '${title}', ${points}, ${carbon})` : `triggerCamera('${id}', '${title}', ${points}, ${carbon})`;
+        const iconName = type === 'text' ? 'message-square' : 'camera';
+        
+        return `<button onclick="${onClickFn}" class="w-full ${btnClass} ${textClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="${iconName}" class="mr-2 w-4 h-4"></i> ${type === 'text' ? '내용 입력 인증' : '사진 인증'}</button>`;
+      };
 
       return `
         <div class="p-6 space-y-4 animate-in">
-          ${adminHtml}
           <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
             <i data-lucide="list-todo" class="mr-2 text-green-600 w-6 h-6"></i>생활 미션
           </h2>
-          <!-- 미션 카드 1 -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="footprints" class="text-blue-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">계단 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.032kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+20P</div>
-            </div>
-            <button onclick="triggerCamera('m1', '계단 이용', 20, 0.032)" class="w-full bg-blue-50 text-blue-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
-          </div>
-          <!-- 미션 카드 2 -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bus" class="text-indigo-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">대중교통 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 1.0kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
-            </div>
-            <button onclick="triggerCamera('m2', '대중교통 이용', 25, 1.0)" class="w-full bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
-          </div>
-          <!-- 미션 카드 3 -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="coffee" class="text-orange-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">다회용컵 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.05kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+15P</div>
-            </div>
-            <button onclick="triggerCamera('m3', '다회용컵 이용', 15, 0.05)" class="w-full bg-orange-50 text-orange-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
-          </div>
-          <!-- 미션 카드 4 -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="file-text" class="text-purple-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">페이퍼리스 <span class="font-normal text-gray-400 text-[10px]">(예 : 이면지 사용)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.029kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
-            </div>
-            <button onclick="handleTextMission('m4', '페이퍼리스', 30, 0.029)" class="w-full bg-purple-50 text-purple-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="message-square" class="mr-2 w-4 h-4"></i> 내용 입력 인증</button>
-          </div>
-
-          <!-- 미션 카드 5 (줍깅/플로깅) -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="recycle" class="text-teal-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">줍깅/플로깅 참여</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
-            </div>
-            <button onclick="triggerCamera('m5', '줍깅/플로깅 참여', 30, 0.5)" class="w-full bg-teal-50 text-teal-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
-          </div>
-
-          <!-- 미션 카드 6 (자전거 이용) -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-cyan-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bike" class="text-cyan-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">자전거 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
-            </div>
-            <button onclick="triggerCamera('m6', '자전거 이용', 25, 0.5)" class="w-full bg-cyan-50 text-cyan-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="camera" class="mr-2 w-4 h-4"></i> 사진 인증</button>
-          </div>
-
-          <!-- 미션 카드 7 (함께하는 에너지지킴이 서약) -->
+          
+          <!-- 미션 1 (에너지지킴이 서약) -->
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="shield-check" class="text-rose-500 w-5 h-5"></i></div>
@@ -597,6 +477,67 @@
               `<button onclick="openPledgeModal()" class="w-full bg-rose-50 text-rose-600 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center hover:bg-rose-100 transition-colors"><i data-lucide="check-square" class="mr-2 w-4 h-4"></i> 서약하기</button>`
             }
           </div>
+
+          <!-- 미션 2 (페이퍼리스) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="file-text" class="text-purple-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">페이퍼리스 <span class="font-normal text-gray-400 text-[10px]">(예 : 이면지 사용)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.029kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
+            </div>
+            ${getActionBtn('m4', '페이퍼리스', 30, 0.029, 'text', 'bg-purple-50', 'text-purple-600')}
+          </div>
+
+          <!-- 미션 3 (계단 이용) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="footprints" class="text-blue-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">계단 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.032kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+20P</div>
+            </div>
+            ${getActionBtn('m1', '계단 이용', 20, 0.032, 'camera', 'bg-blue-50', 'text-blue-600')}
+          </div>
+
+          <!-- 미션 4 (대중교통 이용) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bus" class="text-indigo-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">대중교통 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 1.0kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
+            </div>
+            ${getActionBtn('m2', '대중교통 이용', 25, 1.0, 'camera', 'bg-indigo-50', 'text-indigo-600')}
+          </div>
+
+          <!-- 미션 5 (다회용컵 이용) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="coffee" class="text-orange-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">다회용컵 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.05kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+15P</div>
+            </div>
+            ${getActionBtn('m3', '다회용컵 이용', 15, 0.05, 'camera', 'bg-orange-50', 'text-orange-600')}
+          </div>
+
+          <!-- 미션 6 (줍깅/플로깅) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="recycle" class="text-teal-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">줍깅/플로깅 참여</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
+            </div>
+            ${getActionBtn('m5', '줍깅/플로깅 참여', 30, 0.5, 'camera', 'bg-teal-50', 'text-teal-600')}
+          </div>
+
+          <!-- 미션 7 (자전거 이용) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-cyan-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bike" class="text-cyan-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">자전거 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
+            </div>
+            ${getActionBtn('m6', '자전거 이용', 25, 0.5, 'camera', 'bg-cyan-50', 'text-cyan-600')}
+          </div>
+
         </div>
       `;
     }
