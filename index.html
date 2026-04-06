@@ -68,7 +68,7 @@
           </h1>
           <p class="text-xs text-gray-500 mt-1.5 ml-1">인천서부지사</p>
         </div>
-        <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" class="h-8 object-contain" referrerpolicy="no-referrer" />
+        <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" class="h-8 object-contain mt-1.5" referrerpolicy="no-referrer" />
       </div>
     </header>
 
@@ -108,7 +108,8 @@
   <!-- 캐릭터 선택 모달 -->
   <div id="character-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
     <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
-      <h2 class="text-lg font-bold text-center text-gray-800 mb-4">키울 캐릭터 선택</h2>
+      <h2 class="text-lg font-bold text-center text-gray-800 mb-1">키울 캐릭터 선택</h2>
+      <p class="text-xs text-center text-gray-500 mb-4">지구온난화로 위기에 처한 생태계</p>
       <div class="grid grid-cols-3 gap-3 mb-6">
         <button onclick="selectCharacter('type1')" class="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors">
           <span class="text-3xl mb-1">🌳</span><span class="text-xs font-bold text-green-800">나무</span>
@@ -158,6 +159,19 @@
       
       <button onclick="submitPledge()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 mb-2 transition-colors shadow-md">서약 완료하기 (+50P)</button>
       <button onclick="closePledgeModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">닫기</button>
+    </div>
+  </div>
+
+  <!-- 환경 교육 모달 (이번 주 미션) -->
+  <div id="edu-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in relative">
+      <button onclick="closeEduModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <div id="edu-content" class="mt-2"></div>
+      <div class="mt-6">
+        <button onclick="closeEduModal()" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white transition-colors rounded-xl text-sm font-bold shadow-md">실천하러 가기</button>
+      </div>
     </div>
   </div>
 
@@ -272,7 +286,7 @@
       saveState();
       
       closePledgeModal();
-      alert("에너지지킴이 서약이 완료되었습니다!\n50P 획득 및 1.0kg 탄소 절감 효과가 적용되었습니다.");
+      alert("에너지지킴이 서약이 완료되었습니다!\n50P 획득 및 1.0kg 탄소 저감 효과가 적용되었습니다.");
       render();
     };
 
@@ -368,8 +382,75 @@
       state.carbonSaved = +(state.carbonSaved + missionData.carbon).toFixed(3);
       updateLeaderboard();
       saveState();
-      alert(`[${missionData.title}] 미션 완료!\n${missionData.points}P 및 탄소절감량 ${missionData.carbon}kg이 적립되었습니다.`);
+      alert(`[${missionData.title}] 미션 완료!\n${missionData.points}P 및 탄소저감량 ${missionData.carbon}kg이 적립되었습니다.`);
       render();
+    }
+
+    // --- Education Modal Logic ---
+    const eduData = [
+      {
+        week: 1,
+        title: "당신의 메일함이 지구를 뜨겁게 한다면? 📧",
+        desc: "읽지 않은 스팸 메일 1통을 보관하는 데 약 4g의 탄소가 발생합니다. 전 세계 스팸 메일을 다 지우면 자동차 수백만 대가 멈추는 효과가 있어요!",
+        action: "오늘 쌓여있는 광고 메일 10개만 지워보세요. 지구의 온도가 0.1도 내려갑니다.",
+        tip: "스트리밍 화질을 한 단계만 낮춰도 탄소 배출을 획기적으로 줄일 수 있어요."
+      },
+      {
+        week: 2,
+        title: "햄버거 한 개에 담긴 '보이지 않는 탄소' 🍔",
+        desc: "소고기 패티 1장을 만드는 데 드는 물은 성인이 3개월 동안 샤워할 수 있는 양입니다. 소가 내뿜는 메탄가스는 자동차 배기가스보다 치명적이에요.",
+        action: "일주일에 딱 한 끼만 '고기 없는 식단'을 실천해 보세요. 나무 15그루를 심는 것과 같습니다.",
+        tip: "제철 음식을 먹는 것만으로도 장거리 운송 탄소(푸드 마일리지)를 줄일 수 있어요."
+      },
+      {
+        week: 3,
+        title: "새 옷 한 벌이 완성되기까지의 긴 여정 👕",
+        desc: "흰 면 티셔츠 한 장을 만드는 데 2,700리터의 물이 쓰입니다. 우리가 한 해 버리는 옷은 수천만 톤이며, 대부분은 썩지 않고 독성 가스를 내뿜습니다.",
+        action: "새 옷을 사기 전, 옷장 깊숙이 잠든 옷을 꺼내 입어보세요. 가장 친환경적인 옷은 이미 당신의 옷장에 있습니다.",
+        tip: "유행을 타지 않는 옷을 사서 오래 입는 것이 최고의 탄소 저감 기술입니다."
+      },
+      {
+        week: 4,
+        title: "밤마다 전기를 훔쳐가는 '전기 흡혈귀' 🧛",
+        desc: "꽂아두기만 한 콘센트에서 새어 나가는 대기전력이 가정 에너지 소비의 10%나 됩니다. 쓰지 않는 가전은 잠잘 때만이라도 쉬게 해주세요.",
+        action: "지금 바로 사용하지 않는 충전기 코드 하나만 뽑아주세요. 지구를 위한 작은 쉼표가 됩니다.",
+        tip: "멀티탭 스위치를 끄는 습관은 매달 커피 한 잔 값의 전기료를 아껴줍니다."
+      }
+    ];
+
+    let currentEduWeek = 0;
+
+    window.openEduModal = function() {
+      // 1~4주차 내용 중 랜덤으로 하나를 선택하여 보여줍니다.
+      currentEduWeek = Math.floor(Math.random() * eduData.length);
+      renderEduContent();
+      document.getElementById('edu-modal').classList.remove('hidden');
+    };
+
+    window.closeEduModal = function() {
+      document.getElementById('edu-modal').classList.add('hidden');
+    };
+
+    function renderEduContent() {
+      const data = eduData[currentEduWeek];
+      document.getElementById('edu-content').innerHTML = `
+        <div class="text-center mb-4">
+          <span class="bg-green-100 text-green-800 text-[10px] font-bold px-3 py-1.5 rounded-full">📅 ${data.week}주차 미션</span>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800 mb-3 text-center leading-snug break-keep">${data.title}</h3>
+        <p class="text-sm text-gray-600 mb-5 bg-gray-50 p-3.5 rounded-xl border border-gray-100 leading-relaxed break-keep">${data.desc}</p>
+        
+        <div class="mb-4">
+          <h4 class="text-xs font-bold text-green-700 mb-1.5 flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> 액션</h4>
+          <p class="text-sm text-gray-700 leading-relaxed break-keep">${data.action}</p>
+        </div>
+        
+        <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-100">
+          <h4 class="text-xs font-bold text-blue-700 mb-1.5 flex items-center"><i data-lucide="lightbulb" class="w-4 h-4 mr-1"></i> 한 줄 팁</h4>
+          <p class="text-xs text-gray-700 leading-relaxed break-keep">${data.tip}</p>
+        </div>
+      `;
+      lucide.createIcons();
     }
 
     // --- Render Functions ---
@@ -425,22 +506,17 @@
           </div>
 
           <div class="w-full grid grid-cols-2 gap-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center">
-              <i data-lucide="footprints" class="text-blue-500 mb-2 w-7 h-7"></i>
-              <span class="text-xs text-gray-500">오늘의 걸음</span>
-              <span class="text-xl font-bold text-gray-800">${state.steps.toLocaleString()}보</span>
+            <div onclick="openEduModal()" class="cursor-pointer bg-white p-4 rounded-2xl shadow-sm border border-yellow-200 flex flex-col items-center justify-center hover:bg-yellow-50 transition-colors">
+              <i data-lucide="lightbulb" class="text-yellow-500 mb-2 w-7 h-7"></i>
+              <span class="text-xs text-gray-500">탄소 저감 교육</span>
+              <span class="text-xl font-bold text-gray-800">이번 주 미션</span>
             </div>
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center">
               <i data-lucide="leaf" class="text-green-500 mb-2 w-7 h-7"></i>
-              <span class="text-xs text-gray-500">누적 탄소절감</span>
+              <span class="text-xs text-gray-500">누적 탄소저감</span>
               <span class="text-xl font-bold text-gray-800">${state.carbonSaved} kg</span>
             </div>
           </div>
-
-          <button onclick="handleSyncSteps()" class="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold shadow-md transition-colors flex justify-center items-center">
-            <i data-lucide="footprints" class="mr-2 w-5 h-5"></i>
-            스마트폰 걸음 수 동기화
-          </button>
         </div>
       `;
     }
@@ -469,7 +545,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="shield-check" class="text-rose-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">에너지지킴이 인증 <span class="font-normal text-gray-400 text-[10px]">(1회성)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 1.0kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">에너지지킴이 인증 <span class="font-normal text-gray-400 text-[10px]">(1회성)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 1.0kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+50P</div>
             </div>
             ${state.pledgeCompleted ? 
@@ -482,7 +558,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="file-text" class="text-purple-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">페이퍼리스 <span class="font-normal text-gray-400 text-[10px]">(예 : 이면지 사용)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.029kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">페이퍼리스 <span class="font-normal text-gray-400 text-[10px]">(예 : 이면지 사용)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.029kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
             </div>
             ${getActionBtn('m4', '페이퍼리스', 30, 0.029, 'text', 'bg-purple-50', 'text-purple-600')}
@@ -492,7 +568,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="footprints" class="text-blue-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">계단 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.032kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">계단 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.032kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+20P</div>
             </div>
             ${getActionBtn('m1', '계단 이용', 20, 0.032, 'camera', 'bg-blue-50', 'text-blue-600')}
@@ -502,7 +578,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bus" class="text-indigo-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">대중교통 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 1.0kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">대중교통 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 1.0kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
             </div>
             ${getActionBtn('m2', '대중교통 이용', 25, 1.0, 'camera', 'bg-indigo-50', 'text-indigo-600')}
@@ -512,7 +588,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="coffee" class="text-orange-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">다회용컵 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.05kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">다회용컵 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.05kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+15P</div>
             </div>
             ${getActionBtn('m3', '다회용컵 이용', 15, 0.05, 'camera', 'bg-orange-50', 'text-orange-600')}
@@ -522,7 +598,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="recycle" class="text-teal-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">줍깅/플로깅 참여</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">줍깅/플로깅 참여</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.5kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
             </div>
             ${getActionBtn('m5', '줍깅/플로깅 참여', 30, 0.5, 'camera', 'bg-teal-50', 'text-teal-600')}
@@ -532,7 +608,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-cyan-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bike" class="text-cyan-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">자전거 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">절감량: 0.5kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">자전거 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.5kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
             </div>
             ${getActionBtn('m6', '자전거 이용', 25, 0.5, 'camera', 'bg-cyan-50', 'text-cyan-600')}
@@ -551,7 +627,7 @@
             <div class="pr-2">
               <h2 class="font-extrabold text-green-800 text-base mb-1">실제 나무 심기 효과</h2>
               <p class="text-[10px] text-green-600">국립산림과학원 기준</p>
-              <p class="text-xs text-gray-600 mt-1">지사 총 탄소절감: ${state.carbonSaved.toFixed(1)}kg</p>
+              <p class="text-xs text-gray-600 mt-1">지사 총 탄소저감: ${state.carbonSaved.toFixed(1)}kg</p>
             </div>
             <div class="flex flex-col items-center">
               <span class="text-3xl mb-1">🌲</span>
