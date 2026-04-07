@@ -194,6 +194,26 @@
     let savedChar = localStorage.getItem('eko_charType') || 'type1';
     let savedPledge = localStorage.getItem('eko_pledgeCompleted') === 'true'; // 서약 완료 여부
 
+    let savedLeaderboard = JSON.parse(localStorage.getItem('eko_leaderboard'));
+    let myNameString = savedName ? savedName + ' (나)' : '이름없음 (나)';
+    
+    if (!savedLeaderboard || !Array.isArray(savedLeaderboard)) {
+      savedLeaderboard = [
+        { id: 1, name: myNameString, points: savedPoints, steps: savedSteps, carbon: savedCarbon }
+      ];
+    } else {
+      const myIdx = savedLeaderboard.findIndex(u => u.name.includes('(나)'));
+      if (myIdx > -1) {
+        savedLeaderboard[myIdx].name = myNameString;
+        savedLeaderboard[myIdx].points = savedPoints;
+        savedLeaderboard[myIdx].steps = savedSteps;
+        savedLeaderboard[myIdx].carbon = savedCarbon;
+      } else {
+        savedLeaderboard.push({ id: 1, name: myNameString, points: savedPoints, steps: savedSteps, carbon: savedCarbon });
+      }
+      savedLeaderboard.sort((a, b) => b.points - a.points);
+    }
+
     let state = {
       activeTab: 'home',
       points: savedPoints,
@@ -201,9 +221,7 @@
       carbonSaved: savedCarbon,
       charType: savedChar,
       pledgeCompleted: savedPledge,
-      leaderboard: [
-        { id: 2, name: savedName ? savedName + ' (나)' : '이름없음 (나)', points: savedPoints, steps: savedSteps, carbon: savedCarbon }
-      ],
+      leaderboard: savedLeaderboard,
       pendingMission: null,
       todayMissions: JSON.parse(localStorage.getItem('eko_todayMissions')) || {}
     };
@@ -215,6 +233,7 @@
       localStorage.setItem('eko_charType', state.charType);
       localStorage.setItem('eko_pledgeCompleted', state.pledgeCompleted);
       localStorage.setItem('eko_todayMissions', JSON.stringify(state.todayMissions));
+      localStorage.setItem('eko_leaderboard', JSON.stringify(state.leaderboard));
     }
 
     // --- Onboarding & Character Select ---
@@ -230,7 +249,13 @@
       if (nameInput) {
         localStorage.setItem('eko_userName', nameInput);
         savedName = nameInput;
-        state.leaderboard[0].name = nameInput + ' (나)';
+        
+        const myIdx = state.leaderboard.findIndex(u => u.name.includes('(나)'));
+        if(myIdx > -1) {
+          state.leaderboard[myIdx].name = nameInput + ' (나)';
+          saveState();
+        }
+
         document.getElementById('onboarding-modal').classList.remove('flex');
         document.getElementById('onboarding-modal').classList.add('hidden');
         render();
@@ -339,8 +364,47 @@
     };
 
     function updateLeaderboard() {
-      state.leaderboard[0] = { ...state.leaderboard[0], points: state.points, steps: state.steps, carbon: state.carbonSaved };
+      const myIdx = state.leaderboard.findIndex(u => u.name.includes('(나)'));
+      if(myIdx > -1) {
+         state.leaderboard[myIdx] = { ...state.leaderboard[myIdx], points: state.points, steps: state.steps, carbon: state.carbonSaved };
+      }
+      state.leaderboard.sort((a,b) => b.points - a.points);
     }
+
+    // --- 포인트 지급 시스템 ---
+    window.grantPoints = function() {
+      const targetName = prompt('포인트를 지급/선물할 지사원의 이름을 입력하세요.\n(본인에게 지급하려면 본인 이름 입력)');
+      if (!targetName) return;
+
+      const pointsStr = prompt(`${targetName}님에게 지급할 포인트를 숫자로 입력하세요. (예: 50)`);
+      const addPoints = parseInt(pointsStr);
+      if (isNaN(addPoints) || addPoints <= 0) {
+        alert('올바른 포인트 숫자를 입력해주세요.');
+        return;
+      }
+
+      const myName = savedName ? savedName : '이름없음';
+      if (targetName === myName || targetName === myName + ' (나)' || targetName === '나') {
+         state.points += addPoints;
+         updateLeaderboard();
+         saveState();
+         alert(`본인에게 ${addPoints}P가 지급되었습니다!`);
+         render();
+         return;
+      }
+
+      let user = state.leaderboard.find(u => u.name === targetName);
+      if (user) {
+         user.points += addPoints;
+      } else {
+         state.leaderboard.push({ id: Date.now(), name: targetName, points: addPoints, steps: 0, carbon: 0 });
+      }
+
+      state.leaderboard.sort((a,b) => b.points - a.points);
+      saveState();
+      alert(`${targetName}님에게 ${addPoints}P가 지급되었습니다!`);
+      render();
+    };
 
     window.requestMission = function(missionId) {
       if (state.todayMissions[missionId] === getTodayStr()) {
@@ -368,7 +432,12 @@
 
     window.handleTextMission = function(missionId, title, points, carbon) {
       if (!requestMission(missionId)) return;
-      const text = prompt('어떤 페이퍼리스 활동을 하셨나요?\n(예: 태블릿으로 회의 참석, 이면지 사용 등)'); 
+      
+      let msg = '활동 내용을 입력해주세요.';
+      if (missionId === 'm4') msg = '어떤 페이퍼리스 활동을 하셨나요?\n(예: 태블릿으로 회의 참석, 이면지 사용 등)';
+      if (missionId === 'm8') msg = '수거함에 제출한 폐배터리 종류와 수량을 적어주세요.';
+
+      const text = prompt(msg); 
       if(text && text.trim().length > 0) { 
         completeMission({ missionId, title, points, carbon });
       } else if (text !== null) { 
@@ -523,16 +592,31 @@
 
     function renderMissions() {
       // 렌더링 헬퍼 함수 (오늘 완료 여부에 따른 버튼 상태 변경)
-      const getActionBtn = (id, title, points, carbon, type, btnClass, textClass) => {
+      const getActionBtn = (id, title, points, carbon, type, btnClass, textClass, customText) => {
         const isDone = state.todayMissions[id] === getTodayStr();
         if (isDone) {
           return `<button disabled class="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="check-circle" class="mr-2 w-4 h-4"></i> 오늘 참여 완료</button>`;
         }
         
-        const onClickFn = type === 'text' ? `handleTextMission('${id}', '${title}', ${points}, ${carbon})` : `triggerCamera('${id}', '${title}', ${points}, ${carbon})`;
-        const iconName = type === 'text' ? 'message-square' : 'camera';
+        let onClickFn = '';
+        let iconName = '';
+        let btnText = customText || '';
+
+        if (type === 'text') {
+          onClickFn = `handleTextMission('${id}', '${title}', ${points}, ${carbon})`;
+          iconName = 'message-square';
+          btnText = btnText || '내용 입력 인증';
+        } else if (type === 'report') {
+          onClickFn = `handleTextMission('${id}', '${title}', ${points}, ${carbon})`;
+          iconName = 'megaphone';
+          btnText = btnText || '담당자에게 신고';
+        } else {
+          onClickFn = `triggerCamera('${id}', '${title}', ${points}, ${carbon})`;
+          iconName = 'camera';
+          btnText = btnText || '사진 인증';
+        }
         
-        return `<button onclick="${onClickFn}" class="w-full ${btnClass} ${textClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="${iconName}" class="mr-2 w-4 h-4"></i> ${type === 'text' ? '내용 입력 인증' : '사진 인증'}</button>`;
+        return `<button onclick="${onClickFn}" class="w-full ${btnClass} ${textClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="${iconName}" class="mr-2 w-4 h-4"></i> ${btnText}</button>`;
       };
 
       return `
@@ -554,6 +638,16 @@
             }
           </div>
 
+          <!-- 신규 추가 미션 (폐배터리 수거) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="battery" class="text-yellow-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">폐배터리 수거</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.1kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+50P</div>
+            </div>
+            ${getActionBtn('m8', '폐배터리 수거', 50, 0.1, 'report', 'bg-yellow-50', 'text-yellow-700', '담당자에게 신고')}
+          </div>
+
           <!-- 미션 2 (페이퍼리스) -->
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
@@ -568,10 +662,10 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="footprints" class="text-blue-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">계단 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.032kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">사무실 출입 시 계단 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.032kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+20P</div>
             </div>
-            ${getActionBtn('m1', '계단 이용', 20, 0.032, 'camera', 'bg-blue-50', 'text-blue-600')}
+            ${getActionBtn('m1', '사무실 출입 시 계단 이용', 20, 0.032, 'camera', 'bg-blue-50', 'text-blue-600')}
           </div>
 
           <!-- 신규 추가 미션 (퇴근 전 콘센트 미차단 신고) -->
@@ -588,10 +682,10 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bus" class="text-indigo-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">대중교통 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 1.0kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">출퇴근 대중교통 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 1.0kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
             </div>
-            ${getActionBtn('m2', '대중교통 이용', 25, 1.0, 'camera', 'bg-indigo-50', 'text-indigo-600')}
+            ${getActionBtn('m2', '출퇴근 대중교통 이용', 25, 1.0, 'camera', 'bg-indigo-50', 'text-indigo-600')}
           </div>
 
           <!-- 미션 5 (다회용컵 이용) -->
@@ -602,26 +696,6 @@
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+15P</div>
             </div>
             ${getActionBtn('m3', '다회용컵 이용', 15, 0.05, 'camera', 'bg-orange-50', 'text-orange-600')}
-          </div>
-
-          <!-- 미션 6 (줍깅/플로깅) -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="recycle" class="text-teal-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">줍깅/플로깅 참여</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.5kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+30P</div>
-            </div>
-            ${getActionBtn('m5', '줍깅/플로깅 참여', 30, 0.5, 'camera', 'bg-teal-50', 'text-teal-600')}
-          </div>
-
-          <!-- 미션 7 (자전거 이용) -->
-          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-3">
-              <div class="flex items-center"><div class="w-10 h-10 bg-cyan-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="bike" class="text-cyan-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">자전거 이용</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.5kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+25P</div>
-            </div>
-            ${getActionBtn('m6', '자전거 이용', 25, 0.5, 'camera', 'bg-cyan-50', 'text-cyan-600')}
           </div>
 
         </div>
@@ -649,21 +723,28 @@
           </div>
 
           <div>
-            <h3 class="text-lg font-bold text-gray-800 flex items-center mb-4"><i data-lucide="trophy" class="mr-2 text-yellow-500 w-5 h-5"></i>지사원 랭킹</h3>
+            <div class="flex justify-between items-end mb-4">
+              <h3 class="text-lg font-bold text-gray-800 flex items-center"><i data-lucide="trophy" class="mr-2 text-yellow-500 w-5 h-5"></i>지사원 랭킹</h3>
+              <button onclick="grantPoints()" class="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-100 font-bold hover:bg-indigo-100 transition-colors flex items-center">
+                <i data-lucide="gift" class="w-3 h-3 mr-1"></i>포인트 지급/선물
+              </button>
+            </div>
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div class="flex items-center justify-between p-4 bg-green-50">
-                <div class="flex items-center">
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 bg-yellow-100 text-yellow-700">1</div>
-                  <div>
-                    <div class="font-bold text-gray-800 text-sm">${state.leaderboard[0].name}</div>
-                    <div class="text-[10px] text-gray-500">${state.leaderboard[0].steps.toLocaleString()}보</div>
+              ${state.leaderboard.map((user, idx) => `
+                <div class="flex items-center justify-between p-4 ${idx === 0 ? 'bg-green-50 border-b border-gray-100' : 'border-b border-gray-50 last:border-0'}">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}">${idx + 1}</div>
+                    <div>
+                      <div class="font-bold text-gray-800 text-sm">${user.name}</div>
+                      <div class="text-[10px] text-gray-500">${user.steps.toLocaleString()}보</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-green-600">${user.points}P</div>
+                    <div class="text-lg">${getLevelInfo(user.points, 'type1').emoji}</div>
                   </div>
                 </div>
-                <div class="text-right">
-                  <div class="font-bold text-green-600">${state.leaderboard[0].points}P</div>
-                  <div class="text-lg">${getLevelInfo(state.leaderboard[0].points, state.charType).emoji}</div>
-                </div>
-              </div>
+              `).join('')}
             </div>
           </div>
         </div>
