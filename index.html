@@ -175,6 +175,17 @@
     </div>
   </div>
 
+  <!-- 텍스트 입력 인증 모달 (신규 추가) -->
+  <div id="text-input-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
+      <h2 id="text-modal-title" class="text-lg font-bold text-center text-gray-800 mb-2">인증하기</h2>
+      <p id="text-modal-desc" class="text-xs text-gray-500 text-center mb-4 whitespace-pre-wrap">내용을 입력해주세요.</p>
+      <textarea id="text-modal-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-green-500 resize-none" rows="3" placeholder="여기에 작성해주세요"></textarea>
+      <button onclick="submitTextMission()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl mb-2 hover:bg-green-700 transition-colors">인증 완료</button>
+      <button onclick="closeTextModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">취소</button>
+    </div>
+  </div>
+
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -223,6 +234,7 @@
       pledgeCompleted: savedPledge,
       leaderboard: savedLeaderboard,
       pendingMission: null,
+      pendingTextMission: null,
       todayMissions: JSON.parse(localStorage.getItem('eko_todayMissions')) || {}
     };
 
@@ -435,14 +447,31 @@
       
       let msg = '활동 내용을 입력해주세요.';
       if (missionId === 'm4') msg = '어떤 페이퍼리스 활동을 하셨나요?\n(예: 태블릿으로 회의 참석, 이면지 사용 등)';
-      if (missionId === 'm8') msg = '수거함에 제출한 폐배터리 종류와 수량을 적어주세요.';
 
-      const text = prompt(msg); 
-      if(text && text.trim().length > 0) { 
-        completeMission({ missionId, title, points, carbon });
-      } else if (text !== null) { 
+      state.pendingTextMission = { missionId, title, points, carbon };
+      
+      document.getElementById('text-modal-title').innerText = title;
+      document.getElementById('text-modal-desc').innerText = msg;
+      document.getElementById('text-modal-input').value = '';
+      
+      document.getElementById('text-input-modal').classList.remove('hidden');
+      document.getElementById('text-input-modal').classList.add('flex');
+    };
+
+    window.submitTextMission = function() {
+      const text = document.getElementById('text-modal-input').value.trim();
+      if(text.length > 0) { 
+        completeMission(state.pendingTextMission);
+        closeTextModal();
+      } else { 
         alert('내용을 입력해야 인증이 완료됩니다.'); 
       }
+    };
+
+    window.closeTextModal = function() {
+      document.getElementById('text-input-modal').classList.add('hidden');
+      document.getElementById('text-input-modal').classList.remove('flex');
+      state.pendingTextMission = null;
     };
 
     function completeMission(missionData) {
@@ -601,22 +630,27 @@
         let onClickFn = '';
         let iconName = '';
         let btnText = customText || '';
+        let disabledAttr = '';
+        let extraClass = '';
 
         if (type === 'text') {
-          onClickFn = `handleTextMission('${id}', '${title}', ${points}, ${carbon})`;
+          onClickFn = `handleTextMission('${id}', '${title}', ${points}, ${carbon}')`;
           iconName = 'message-square';
           btnText = btnText || '내용 입력 인증';
         } else if (type === 'report') {
-          onClickFn = `handleTextMission('${id}', '${title}', ${points}, ${carbon})`;
+          // 담당자 신고 버튼 클릭 비활성화
+          onClickFn = ''; 
           iconName = 'megaphone';
           btnText = btnText || '담당자에게 신고';
+          disabledAttr = 'disabled';
+          extraClass = 'opacity-50 cursor-not-allowed';
         } else {
-          onClickFn = `triggerCamera('${id}', '${title}', ${points}, ${carbon})`;
+          onClickFn = `triggerCamera('${id}', '${title}', ${points}, ${carbon}')`;
           iconName = 'camera';
           btnText = btnText || '사진 인증';
         }
         
-        return `<button onclick="${onClickFn}" class="w-full ${btnClass} ${textClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center"><i data-lucide="${iconName}" class="mr-2 w-4 h-4"></i> ${btnText}</button>`;
+        return `<button ${disabledAttr} ${onClickFn ? `onclick="${onClickFn}"` : ''} class="w-full ${btnClass} ${textClass} ${extraClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center transition-colors"><i data-lucide="${iconName}" class="mr-2 w-4 h-4"></i> ${btnText}</button>`;
       };
 
       return `
