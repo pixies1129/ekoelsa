@@ -54,12 +54,12 @@
     .animate-spin-slow { animation: spin-slow 10s linear infinite; }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 flex justify-center font-sans text-gray-800">
+<body class="h-[100dvh] bg-gray-50 flex justify-center font-sans text-gray-800 overflow-hidden">
 
-  <div class="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col">
+  <div class="w-full max-w-md bg-white h-full shadow-2xl relative flex flex-col">
     
     <!-- 헤더 -->
-    <header class="bg-white pt-12 pb-4 px-6 sticky top-0 z-10 border-b border-gray-100">
+    <header class="bg-white pt-12 pb-4 px-6 shrink-0 z-10 border-b border-gray-100">
       <div class="flex justify-between items-start">
         <div class="pt-1">
           <h1 class="text-2xl font-extrabold text-green-700 tracking-tight flex items-center leading-none">
@@ -73,10 +73,10 @@
     </header>
 
     <!-- 메인 콘텐츠 -->
-    <main id="app-content" class="flex-1 overflow-y-auto pb-24"></main>
+    <main id="app-content" class="flex-1 overflow-y-auto pb-6"></main>
 
     <!-- 하단 네비게이션 -->
-    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-3 flex justify-between pb-8">
+    <nav class="w-full bg-white border-t border-gray-200 px-6 py-3 flex justify-between pb-8 shrink-0">
       <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center flex-1 transition-colors text-green-600">
         <i data-lucide="home" class="w-6 h-6"></i>
         <span class="text-[10px] mt-1 font-medium">마이홈</span>
@@ -125,12 +125,20 @@
     </div>
   </div>
 
-  
+  <!-- 로딩 오버레이 -->
+  <div id="sync-loading" class="fixed inset-0 bg-white/80 z-50 items-center justify-center hidden backdrop-blur-sm">
+    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+      <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
+      <p class="font-bold text-gray-800">건강 데이터 동기화 중...</p>
+      <p class="text-xs text-gray-500 mt-1">Samsung / Apple Health 연결 중</p>
+    </div>
+  </div>
+
   <!-- 에너지지킴이 서약 모달 (신규 추가) -->
   <div id="pledge-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
     <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
       <h2 class="text-lg font-bold text-center text-green-700 mb-4 flex items-center justify-center">
-        <i data-lucide="shield-check" class="mr-2"></i> 모두의 에너지지킴이 행동 서약
+        <i data-lucide="shield-check" class="mr-2"></i> 에너지지킴이 행동 서약
       </h2>
       <p class="text-xs text-gray-500 text-center mb-5">아래 항목들에 모두 체크하여<br/>에너지지킴이로 활동할 것을 서약해주세요.</p>
       
@@ -145,7 +153,7 @@
         </label>
         <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
           <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
-          <span class="flex-1 leading-snug">나는 공공기관 실내온도(여름 28도, 겨울 18도)를 준수하겠습니다.</span>
+          <span class="flex-1 leading-snug">나는 적정 실내온도(여름 26도, 겨울 20도)를 준수하겠습니다.</span>
         </label>
       </div>
       
@@ -469,6 +477,7 @@
           <div class="w-full bg-white rounded-2xl p-6 shadow-sm border border-green-100 flex flex-col items-center">
             <div class="flex justify-between w-full items-center mb-2">
               <h2 class="text-lg font-bold text-gray-700">내 캐릭터</h2>
+              <span class="text-[10px] text-gray-400">클릭하여 변경</span>
             </div>
             
             <div onclick="openCharacterModal()" class="cursor-pointer relative w-40 h-40 bg-white flex items-center justify-center mb-4 border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0">
@@ -536,7 +545,7 @@
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div class="flex justify-between mb-3">
               <div class="flex items-center"><div class="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="shield-check" class="text-rose-500 w-5 h-5"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-sm">에너지지킴이 인증 <span class="font-normal text-gray-400 text-[10px]">(1회성)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 1.0kg</p></div></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">모두의 에너지지킴이 서약 <span class="font-normal text-gray-400 text-[10px]">(1회성)</span></h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 1.0kg</p></div></div>
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+50P</div>
             </div>
             ${state.pledgeCompleted ? 
@@ -563,6 +572,16 @@
               <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+20P</div>
             </div>
             ${getActionBtn('m1', '계단 이용', 20, 0.032, 'camera', 'bg-blue-50', 'text-blue-600')}
+          </div>
+
+          <!-- 신규 추가 미션 (퇴근 전 콘센트 미차단 신고) -->
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex justify-between mb-3">
+              <div class="flex items-center"><div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="plug" class="text-red-500 w-5 h-5"></i></div>
+              <div><h3 class="font-bold text-gray-800 text-sm">퇴근 전 콘센트 미차단 신고</h3><p class="text-[10px] text-gray-500 mt-0.5">저감량: 0.1kg</p></div></div>
+              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold h-fit">+20P</div>
+            </div>
+            ${getActionBtn('m7', '퇴근 전 콘센트 미차단 신고', 20, 0.1, 'camera', 'bg-red-50', 'text-red-600')}
           </div>
 
           <!-- 미션 4 (대중교통 이용) -->
