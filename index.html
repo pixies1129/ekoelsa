@@ -125,20 +125,12 @@
     </div>
   </div>
 
-  <!-- 로딩 오버레이 -->
-  <div id="sync-loading" class="fixed inset-0 bg-white/80 z-50 items-center justify-center hidden backdrop-blur-sm">
-    <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
-      <div class="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
-      <p class="font-bold text-gray-800">건강 데이터 동기화 중...</p>
-      <p class="text-xs text-gray-500 mt-1">Samsung / Apple Health 연결 중</p>
-    </div>
-  </div>
-
+  
   <!-- 에너지지킴이 서약 모달 (신규 추가) -->
   <div id="pledge-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
     <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
       <h2 class="text-lg font-bold text-center text-green-700 mb-4 flex items-center justify-center">
-        <i data-lucide="shield-check" class="mr-2"></i> 에너지지킴이 행동 서약
+        <i data-lucide="shield-check" class="mr-2"></i> 모두의 에너지지킴이 행동 서약
       </h2>
       <p class="text-xs text-gray-500 text-center mb-5">아래 항목들에 모두 체크하여<br/>에너지지킴이로 활동할 것을 서약해주세요.</p>
       
@@ -153,7 +145,7 @@
         </label>
         <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
           <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
-          <span class="flex-1 leading-snug">나는 적정 실내온도(여름 26도, 겨울 20도)를 준수하겠습니다.</span>
+          <span class="flex-1 leading-snug">나는 공공기관 실내온도(여름 28도, 겨울 18도)를 준수하겠습니다.</span>
         </label>
       </div>
       
@@ -170,7 +162,7 @@
       </button>
       <div id="edu-content" class="mt-2"></div>
       <div class="mt-6">
-        <button onclick="closeEduModal()" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white transition-colors rounded-xl text-sm font-bold shadow-md">실천하러 가기</button>
+        <button onclick="closeEduModal()" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white transition-colors rounded-xl text-sm font-bold shadow-md">확인</button>
       </div>
     </div>
   </div>
@@ -477,7 +469,6 @@
           <div class="w-full bg-white rounded-2xl p-6 shadow-sm border border-green-100 flex flex-col items-center">
             <div class="flex justify-between w-full items-center mb-2">
               <h2 class="text-lg font-bold text-gray-700">내 캐릭터</h2>
-              <span class="text-[10px] text-gray-400">클릭하여 변경</span>
             </div>
             
             <div onclick="openCharacterModal()" class="cursor-pointer relative w-40 h-40 bg-white flex items-center justify-center mb-4 border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0">
