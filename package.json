@@ -1,9 +1,0 @@
-{
-  "name": "eko-elsa-monorepo",
-  "private": true,
-  "scripts": {
-    "dev": "pnpm --filter \"./apps/**\" dev",
-    "build": "pnpm --filter \"./apps/**\" build",
-    "start": "pnpm --filter \"./apps/**\" start"
-  }
-}

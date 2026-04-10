@@ -3,7 +3,10 @@ const cors = require('cors');
 const Redis = require('ioredis'); // ioredis 라이브러리 사용
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', process.env.FRONTEND_URL],
+  credentials: true
+}));
 app.use(express.json());
 
 // REDIS_URL 환경변수를 사용하여 Redis 클라이언트 생성
@@ -133,7 +136,7 @@ app.post('/api/points/gift', async (req, res) => {
 
 // 로컬 실행용
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3001; 
   app.listen(PORT, () => {
     console.log(`Redis Connected (URL: ${process.env.REDIS_URL ? 'External' : 'Local'})`);
     console.log(`Server is running on http://localhost:${PORT}`);
