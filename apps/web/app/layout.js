@@ -1,25 +1,23 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata = {
-  title: "EKO-ELSA",
+  title: "EKO-ELSA - 인천서부지사",
   description: "인천서부지사 탄소중립 실천 앱",
+  manifest: "/manifest.json",
+};
+
+export const viewport = {
+  themeColor: "#16a34a",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased">
+    <html lang="ko">
+      <body className="bg-gray-100 flex justify-center items-center min-h-screen font-sans text-gray-800 antialiased">
         {children}
       </body>
     </html>
