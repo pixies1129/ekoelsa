@@ -1,13 +1,12 @@
 {
-  "headers": [
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/apps/api/index.js"
+    },
     {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, s-maxage=0, must-revalidate"
-        }
-      ]
+      "destination": "/apps/web/$1"
     }
   ]
 }
