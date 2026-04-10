@@ -1,10 +1,9 @@
 {
-  "name": "eko-elsa-api",
-  "version": "1.0.0",
-  "main": "api/index.js",
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "ioredis": "^5.3.2"
+  "name": "eko-elsa-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter \"./apps/**\" dev",
+    "build": "pnpm --filter \"./apps/**\" build",
+    "start": "pnpm --filter \"./apps/**\" start"
   }
 }
