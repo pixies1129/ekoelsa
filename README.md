@@ -10,9 +10,30 @@
 ### 1. 사전 준비 사항
 - **pnpm**: v9 이상 권장 (`npm install -g pnpm`)
 - **Node.js**: v18 이상 권장
-- **Redis**: 로컬에 Redis 서버가 실행 중이어야 합니다. (기본 포트: 6379)
-  - Windows: Docker 또는 WSL2에서 Redis 실행 권장
-  - macOS: `brew install redis && brew services start redis`
+- **Redis**: 로컬 환경에서 백엔드 API가 동작하려면 Redis 서버가 실행 중이어야 합니다. (기본 포트: 6379)
+
+#### 방법 A: 로컬 Redis 서버 실행 (추천)
+- **macOS**: 
+  ```bash
+  brew install redis
+  brew services start redis
+  ```
+- **Windows (Docker 사용)**:
+  ```bash
+  docker run --name eko-redis -p 6379:6379 -d redis
+  ```
+- **Windows (WSL2)**:
+  ```bash
+  sudo apt update
+  sudo apt install redis-server
+  sudo service redis-server start
+  ```
+
+#### 방법 B: 외부 Redis 서버 사용 (Upstash 등)
+이미 사용 중인 원격 Redis 서버가 있다면 `apps/api/.env` 파일에 `REDIS_URL`을 설정하세요.
+```text
+REDIS_URL=redis://default:password@host:port
+```
 
 ### 2. 의존성 설치
 프로젝트 루트 디렉토리에서 아래 명령어를 실행합니다.
