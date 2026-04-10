@@ -16,9 +16,22 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ko">
-      <body className="bg-gray-100 flex justify-center items-center min-h-screen font-sans text-gray-800 antialiased">
+    <html lang="ko" suppressHydrationWarning>
+      <body className="bg-gray-100 flex justify-center items-center min-h-screen font-sans text-gray-800" suppressHydrationWarning>
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                  }
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
