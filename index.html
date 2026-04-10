@@ -12,6 +12,19 @@
 
   <style>
     body { -webkit-tap-highlight-color: transparent; }
+    
+    /* PC/모바일 반응형 완벽 대응을 위한 컨테이너 높이 설정 */
+    .app-container {
+      height: 100vh; /* 구형 브라우저 대비용 */
+      height: 100dvh; /* 최신 모바일 브라우저 주소창 대응 */
+    }
+    @media (min-width: 640px) {
+      .app-container {
+        height: 850px;
+        max-height: 90vh;
+      }
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.98); }
       to { opacity: 1; transform: scale(1); }
@@ -23,7 +36,6 @@
     }
     .animate-bounce-slow { animation: bounce-slow 2s infinite; }
     
-    /* 캐릭터 전용 추가 애니메이션 이펙트 */
     @keyframes breath { 
       0%, 100% { transform: scale(1); } 
       50% { transform: scale(1.1); } 
@@ -54,12 +66,13 @@
     .animate-spin-slow { animation: spin-slow 10s linear infinite; }
   </style>
 </head>
-<body class="h-[100dvh] bg-gray-50 flex justify-center font-sans text-gray-800 overflow-hidden">
+<body class="bg-gray-100 flex justify-center items-center min-h-screen font-sans text-gray-800">
 
-  <div class="w-full max-w-md bg-white h-full shadow-2xl relative flex flex-col">
+  <!-- w-full max-w-md 설정과 PC화면 라운드 처리로 레이아웃 완벽 최적화 -->
+  <div class="w-full max-w-md bg-white app-container sm:rounded-[2.5rem] shadow-2xl relative flex flex-col overflow-hidden sm:border-[6px] sm:border-gray-200">
     
     <!-- 헤더 -->
-    <header class="bg-white pt-12 pb-4 px-6 shrink-0 z-10 border-b border-gray-100">
+    <header class="bg-white pt-12 sm:pt-8 pb-4 px-6 shrink-0 z-10 border-b border-gray-100">
       <div class="flex justify-between items-start">
         <div class="pt-1">
           <h1 class="text-2xl font-extrabold text-green-700 tracking-tight flex items-center leading-none">
@@ -76,7 +89,7 @@
     <main id="app-content" class="flex-1 overflow-y-auto pb-6"></main>
 
     <!-- 하단 네비게이션 -->
-    <nav class="w-full bg-white border-t border-gray-100 px-6 py-3 flex justify-between pb-8 shrink-0 relative z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+    <nav class="w-full bg-white border-t border-gray-100 px-6 py-3 flex justify-between pb-8 sm:pb-5 shrink-0 relative z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
       <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center flex-1 transition-all text-gray-400">
         <i data-lucide="home" class="w-6 h-6 mb-1"></i>
         <span class="text-[10px] font-medium">홈</span>
@@ -181,7 +194,7 @@
     </div>
   </div>
 
-  <!-- 포인트 지급/선물 전용 모달 (prompt 대체) -->
+  <!-- 포인트 지급/선물 전용 모달 -->
   <div id="grant-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
     <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
       <h2 class="text-lg font-bold text-center text-gray-800 mb-4 flex items-center justify-center"><i data-lucide="gift" class="mr-2 text-indigo-500 w-5 h-5"></i>포인트 선물하기</h2>
@@ -224,7 +237,17 @@
     let savedChar = localStorage.getItem('eko_charType') || 'type1';
     let savedPledge = localStorage.getItem('eko_pledgeCompleted') === 'true'; 
 
-    let savedLeaderboard = JSON.parse(localStorage.getItem('eko_leaderboard'));
+    // 안전하게 localStorage 데이터 파싱 (데이터 손상 시 앱 다운 방지)
+    let savedLeaderboard = [];
+    try {
+      savedLeaderboard = JSON.parse(localStorage.getItem('eko_leaderboard'));
+    } catch (e) {}
+    
+    let todayMissionsObj = {};
+    try {
+      todayMissionsObj = JSON.parse(localStorage.getItem('eko_todayMissions')) || {};
+    } catch(e) {}
+
     let myNameString = savedName ? savedName + ' (나)' : '이름없음 (나)';
     
     if (!savedLeaderboard || !Array.isArray(savedLeaderboard)) {
@@ -254,7 +277,7 @@
       leaderboard: savedLeaderboard,
       pendingMission: null,
       pendingTextMission: null,
-      todayMissions: JSON.parse(localStorage.getItem('eko_todayMissions')) || {}
+      todayMissions: todayMissionsObj
     };
 
     function saveState() {
@@ -623,7 +646,7 @@
           <p class="text-xs text-gray-700 leading-relaxed break-keep">${data.tip}</p>
         </div>
       `;
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
       document.getElementById('edu-modal').classList.remove('hidden');
     };
 
@@ -801,6 +824,7 @@
     }
 
     function renderForest() {
+      // 리더보드 데이터에서 안전하게 탄소량 총합 계산
       const safeTotal = state.leaderboard.reduce((sum, user) => sum + (user.carbon || 0), 0);
       const equivalentTrees = (safeTotal / 6.6).toFixed(1);
 
@@ -853,803 +877,22 @@
       if (state.activeTab === 'home') contentDiv.innerHTML = renderHome();
       else if (state.activeTab === 'missions') contentDiv.innerHTML = renderMissions();
       else if (state.activeTab === 'forest') contentDiv.innerHTML = renderForest();
-      lucide.createIcons();
+      
+      // lucide 아이콘 오류 방지용 안전 호출
+      if (window.lucide) {
+        lucide.createIcons();
+      }
     }
 
     checkOnboarding();
     checkUrlForMission(); // 앱 실행 시 QR코드 URL 체크 로직 실행
     render();
     switchTab('home'); 
-    lucide.createIcons();
-  </script>
-</body>
-</html>    <!-- 하단 네비게이션 -->
-    <nav class="w-full bg-white border-t border-gray-100 px-6 py-3 flex justify-between pb-8 shrink-0 relative z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center flex-1 transition-all text-gray-400">
-        <i data-lucide="home" class="w-6 h-6 mb-1"></i>
-        <span class="text-[10px] font-medium">홈</span>
-      </button>
-      <button onclick="switchTab('missions')" id="nav-missions" class="flex flex-col items-center flex-1 transition-all text-gray-400">
-        <i data-lucide="check-square" class="w-6 h-6 mb-1"></i>
-        <span class="text-[10px] font-medium">미션</span>
-      </button>
-      <button onclick="switchTab('forest')" id="nav-forest" class="flex flex-col items-center flex-1 transition-all text-gray-400">
-        <i data-lucide="trophy" class="w-6 h-6 mb-1"></i>
-        <span class="text-[10px] font-medium">랭킹</span>
-      </button>
-    </nav>
     
-    <!-- iOS Safari 작동을 위해 display:none 대신 시각적으로만 숨김 처리 -->
-    <input type="file" id="camera-input" accept="image/*" capture="environment" class="absolute w-0 h-0 opacity-0 pointer-events-none" tabindex="-1" onchange="handlePhotoUpload(event)" />
-  </div>
-
-  <!-- 공통 커스텀 토스트 알림창 (alert 대체) -->
-  <div id="custom-toast" class="fixed bottom-28 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3.5 rounded-full shadow-2xl z-[100] text-sm font-bold text-center whitespace-pre-wrap transition-all duration-300 opacity-0 pointer-events-none scale-95 w-11/12 max-w-[320px]"></div>
-
-  <!-- 이름 입력 모달 -->
-  <div id="onboarding-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
-      <div class="flex justify-center mb-4"><span class="text-5xl">🌱</span></div>
-      <h2 class="text-xl font-bold text-center text-gray-800 mb-2">환영합니다!</h2>
-      <p class="text-sm text-gray-500 text-center mb-6">EKO-ELSA에서 사용할 이름을 입력해주세요.</p>
-      <input type="text" id="username-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-green-500" placeholder="이름 입력 (예: 홍길동)" />
-      <button onclick="saveUserName()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-colors">시작하기</button>
-    </div>
-  </div>
-
-  <!-- 캐릭터 선택 모달 -->
-  <div id="character-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
-      <h2 class="text-lg font-bold text-center text-gray-800 mb-1">키울 캐릭터 선택</h2>
-      <p class="text-xs text-center text-gray-500 mb-4">지구온난화로 위기에 처한 생태계</p>
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <button onclick="selectCharacter('type1')" class="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors">
-          <span class="text-3xl mb-1">🌳</span><span class="text-xs font-bold text-green-800">나무</span>
-        </button>
-        <button onclick="selectCharacter('type2')" class="bg-blue-50 border border-blue-200 p-4 rounded-xl flex flex-col items-center hover:bg-blue-100 transition-colors">
-          <span class="text-3xl mb-1">🐻‍❄️</span><span class="text-xs font-bold text-blue-800">북극곰</span>
-        </button>
-        <button onclick="selectCharacter('type3')" class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex flex-col items-center hover:bg-indigo-100 transition-colors">
-          <span class="text-3xl mb-1">🐧</span><span class="text-xs font-bold text-indigo-800">펭귄</span>
-        </button>
-      </div>
-      <button onclick="closeCharacterModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">닫기</button>
-    </div>
-  </div>
-
-  <!-- 에너지지킴이 서약 모달 -->
-  <div id="pledge-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
-      <h2 class="text-lg font-bold text-center text-green-700 mb-4 flex items-center justify-center">
-        <i data-lucide="shield-check" class="mr-2"></i> 에너지지킴이 행동 서약
-      </h2>
-      <p class="text-xs text-gray-500 text-center mb-5">아래 항목들에 모두 체크하여<br/>에너지지킴이로 활동할 것을 서약해주세요.</p>
-      
-      <div class="space-y-3 mb-6 text-sm text-gray-700">
-        <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
-          <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
-          <span class="flex-1 leading-snug">나는 사용하지 않는 전자기기의 플러그를 뽑겠습니다.</span>
-        </label>
-        <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
-          <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
-          <span class="flex-1 leading-snug">나는 점심시간 및 퇴근 시 조명과 PC를 끄겠습니다.</span>
-        </label>
-        <label class="flex items-start space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-green-50 transition-colors">
-          <input type="checkbox" class="pledge-checkbox mt-0.5 text-green-600 w-4 h-4 focus:ring-green-500 rounded" />
-          <span class="flex-1 leading-snug">나는 적정 실내온도(여름 26도, 겨울 20도)를 준수하겠습니다.</span>
-        </label>
-      </div>
-      
-      <button onclick="submitPledge()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 mb-2 transition-colors shadow-md">서약 완료하기 (+50P)</button>
-      <button onclick="closePledgeModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">닫기</button>
-    </div>
-  </div>
-
-  <!-- 환경 교육 모달 (탄소중립 실천) -->
-  <div id="edu-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in relative">
-      <button onclick="closeEduModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-      <div id="edu-content" class="mt-2"></div>
-      <div class="mt-6">
-        <button onclick="closeEduModal()" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white transition-colors rounded-xl text-sm font-bold shadow-md">확인</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 텍스트 입력 인증 전용 모달 -->
-  <div id="text-input-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
-      <h2 id="text-modal-title" class="text-lg font-bold text-center text-gray-800 mb-2">인증하기</h2>
-      <p id="text-modal-desc" class="text-xs text-gray-500 text-center mb-4 whitespace-pre-wrap">내용을 입력해주세요.</p>
-      <textarea id="text-modal-input" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-green-500 resize-none" rows="3" placeholder="여기에 작성해주세요"></textarea>
-      <button onclick="submitTextMission()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl mb-2 hover:bg-green-700 transition-colors">인증 완료</button>
-      <button onclick="closeTextModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">취소</button>
-    </div>
-  </div>
-
-  <!-- 포인트 지급/선물 전용 모달 (prompt 대체) -->
-  <div id="grant-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
-    <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
-      <h2 class="text-lg font-bold text-center text-gray-800 mb-4 flex items-center justify-center"><i data-lucide="gift" class="mr-2 text-indigo-500 w-5 h-5"></i>포인트 선물하기</h2>
-      <input type="text" id="grant-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-3 focus:outline-none focus:border-indigo-500" placeholder="받을 지사원 이름 (본인은 '나')" />
-      <input type="number" id="grant-points" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-5 focus:outline-none focus:border-indigo-500" placeholder="지급할 포인트 (숫자만 입력)" />
-      <button onclick="submitGrant()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl mb-2 hover:bg-indigo-700 transition-colors">포인트 지급</button>
-      <button onclick="closeGrantModal()" class="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-xl hover:bg-gray-300 transition-colors">취소</button>
-    </div>
-  </div>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(()=>{});
-      });
-    }
-
-    function getTodayStr() {
-      const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-    }
-
-    // 커스텀 토스트 알림 함수
-    window.showToast = function(message) {
-      const toast = document.getElementById('custom-toast');
-      toast.innerText = message;
-      toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-      toast.classList.add('opacity-100', 'scale-100');
-      
-      setTimeout(() => {
-        toast.classList.remove('opacity-100', 'scale-100');
-        toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-      }, 3000);
-    };
-
-    // --- State Initialization ---
-    let savedName = localStorage.getItem('eko_userName') || '';
-    let savedPoints = parseInt(localStorage.getItem('eko_points')) || 0;
-    let savedSteps = parseInt(localStorage.getItem('eko_steps')) || 0;
-    let savedCarbon = parseFloat(localStorage.getItem('eko_carbon')) || 0;
-    let savedChar = localStorage.getItem('eko_charType') || 'type1';
-    let savedPledge = localStorage.getItem('eko_pledgeCompleted') === 'true'; 
-
-    let savedLeaderboard = JSON.parse(localStorage.getItem('eko_leaderboard'));
-    let myNameString = savedName ? savedName + ' (나)' : '이름없음 (나)';
-    
-    if (!savedLeaderboard || !Array.isArray(savedLeaderboard)) {
-      savedLeaderboard = [
-        { id: 1, name: myNameString, points: savedPoints, steps: savedSteps, carbon: savedCarbon }
-      ];
-    } else {
-      const myIdx = savedLeaderboard.findIndex(u => u.name.includes('(나)'));
-      if (myIdx > -1) {
-        savedLeaderboard[myIdx].name = myNameString;
-        savedLeaderboard[myIdx].points = savedPoints;
-        savedLeaderboard[myIdx].steps = savedSteps;
-        savedLeaderboard[myIdx].carbon = savedCarbon;
-      } else {
-        savedLeaderboard.push({ id: 1, name: myNameString, points: savedPoints, steps: savedSteps, carbon: savedCarbon });
-      }
-      savedLeaderboard.sort((a, b) => b.points - a.points);
-    }
-
-    let state = {
-      activeTab: 'home',
-      points: savedPoints,
-      steps: savedSteps,
-      carbonSaved: savedCarbon,
-      charType: savedChar,
-      pledgeCompleted: savedPledge,
-      leaderboard: savedLeaderboard,
-      pendingMission: null,
-      pendingTextMission: null,
-      todayMissions: JSON.parse(localStorage.getItem('eko_todayMissions')) || {}
-    };
-
-    function saveState() {
-      localStorage.setItem('eko_points', state.points);
-      localStorage.setItem('eko_steps', state.steps);
-      localStorage.setItem('eko_carbon', state.carbonSaved);
-      localStorage.setItem('eko_charType', state.charType);
-      localStorage.setItem('eko_pledgeCompleted', state.pledgeCompleted);
-      localStorage.setItem('eko_todayMissions', JSON.stringify(state.todayMissions));
-      localStorage.setItem('eko_leaderboard', JSON.stringify(state.leaderboard));
-    }
-
-    // --- QR 코드 연동 로직 (앱 실행 시 URL 확인) ---
-    function checkUrlForMission() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const missionParam = urlParams.get('mission');
-      
-      if (missionParam === 'm8') {
-        // 새로고침 시 중복 지급을 방지하기 위해 URL에서 파라미터를 즉시 지웁니다.
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        setTimeout(() => {
-          if (!savedName) {
-            showToast('이름을 먼저 설정한 후 다시 QR을 스캔해주세요.');
-            return;
-          }
-          if (state.todayMissions['m8'] === getTodayStr()) {
-            showToast('오늘 이미 폐배터리 수거 인증을 완료했습니다.');
-            return;
-          }
-          completeMission({ missionId: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1 });
-        }, 800); // 앱 로딩 후 자연스럽게 알림이 뜨도록 약간의 지연
-      }
-    }
-
-    // --- Onboarding & Character Select ---
-    window.checkOnboarding = function() {
-      if (!savedName) {
-        document.getElementById('onboarding-modal').classList.remove('hidden');
-        document.getElementById('onboarding-modal').classList.add('flex');
-      }
-    };
-
-    window.saveUserName = function() {
-      const nameInput = document.getElementById('username-input').value.trim();
-      if (nameInput) {
-        localStorage.setItem('eko_userName', nameInput);
-        savedName = nameInput;
-        
-        const myIdx = state.leaderboard.findIndex(u => u.name.includes('(나)'));
-        if(myIdx > -1) {
-          state.leaderboard[myIdx].name = nameInput + ' (나)';
-          saveState();
-        }
-
-        document.getElementById('onboarding-modal').classList.remove('flex');
-        document.getElementById('onboarding-modal').classList.add('hidden');
-        render();
-      } else { 
-        showToast('이름을 입력해주세요.'); 
-      }
-    };
-
-    window.openCharacterModal = function() {
-      document.getElementById('character-modal').classList.remove('hidden');
-      document.getElementById('character-modal').classList.add('flex');
-    };
-
-    window.closeCharacterModal = function() {
-      document.getElementById('character-modal').classList.add('hidden');
-    };
-
-    window.selectCharacter = function(type) {
-      state.charType = type;
-      saveState();
-      closeCharacterModal();
-      render();
-    };
-
-    // --- Energy Guardian Pledge ---
-    window.openPledgeModal = function() {
-      if (state.pledgeCompleted) {
-        showToast("이미 서약을 완료하셨습니다.");
-        return;
-      }
-      document.querySelectorAll('.pledge-checkbox').forEach(cb => cb.checked = false);
-      document.getElementById('pledge-modal').classList.remove('hidden');
-      document.getElementById('pledge-modal').classList.add('flex');
-    };
-
-    window.closePledgeModal = function() {
-      document.getElementById('pledge-modal').classList.add('hidden');
-      document.getElementById('pledge-modal').classList.remove('flex');
-    };
-
-    window.submitPledge = function() {
-      const checkboxes = document.querySelectorAll('.pledge-checkbox');
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      
-      if (!allChecked) {
-        showToast("모든 행동 서약 항목에 체크해주세요.");
-        return;
-      }
-      
-      state.pledgeCompleted = true;
-      state.points += 50;
-      state.carbonSaved = +(state.carbonSaved + 1.0).toFixed(3);
-      updateLeaderboard();
-      saveState();
-      
-      closePledgeModal();
-      showToast("에너지지킴이 서약이 완료되었습니다!\n50P 획득 및 1.0kg 탄소 저감 효과가 적용되었습니다.");
-      render();
-    };
-
-    // --- Growth Logic ---
-    function getLevelInfo(currentPoints, type) {
-      const types = {
-        type1: { l1:'🌱', l2:'🌿', l3:'🪴', l4:'🌳' },
-        type2: { l1:'💧', l2:'❄️', l3:'🧊', l4:'🐻‍❄️' },
-        type3: { l1:'🥚', l2:'❄️', l3:'🧊', l4:'🐧' }
-      };
-      const emojis = types[type] || types.type1;
-
-      if (currentPoints < 1000) return { level: 1, name: '(1/3)', emoji: emojis.l1, max: 1000, color: 'text-green-400' };
-      if (currentPoints < 2000) return { level: 2, name: '(2/3)', emoji: emojis.l2, max: 2000, color: 'text-blue-400' };
-      if (currentPoints < 3000) return { level: 3, name: '(3/3)', emoji: emojis.l3, max: 3000, color: 'text-indigo-500' };
-      return { level: 4, name: '성장완료', emoji: emojis.l4, max: 3000, color: 'text-gray-800' };
-    }
-
-    function getProgressPercent() {
-      const levelInfo = getLevelInfo(state.points, state.charType);
-      if (levelInfo.level === 4) return 100;
-      let base = (levelInfo.level - 1) * 1000;
-      return Math.min(100, Math.max(0, ((state.points - base) / 1000) * 100));
-    }
-
-    // --- Actions ---
-    window.switchTab = function(tab) {
-      state.activeTab = tab;
-      
-      const navs = [
-        { id: 'home', title: '홈', icon: 'home', color: '#059669', bg: '#d1fae5', textClass: 'text-emerald-600' },
-        { id: 'missions', title: '미션', icon: 'check-square', color: '#2563eb', bg: '#dbeafe', textClass: 'text-blue-600' },
-        { id: 'forest', title: '랭킹', icon: 'trophy', color: '#f97316', bg: '#ffedd5', textClass: 'text-orange-500' }
-      ];
-
-      navs.forEach(n => {
-        const btn = document.getElementById('nav-' + n.id);
-        if (tab === n.id) {
-          btn.className = `flex flex-col items-center flex-1 transition-all ${n.textClass} scale-105`;
-          btn.innerHTML = `<i data-lucide="${n.icon}" class="w-6 h-6 mb-1 drop-shadow-sm" style="fill: ${n.bg}; color: ${n.color}; stroke-width: 2.5px;"></i><span class="text-[11px] font-extrabold">${n.title}</span>`;
-        } else {
-          btn.className = "flex flex-col items-center flex-1 transition-all text-gray-400 hover:text-gray-500 cursor-pointer";
-          btn.innerHTML = `<i data-lucide="${n.icon}" class="w-6 h-6 mb-1 opacity-70" style="stroke-width: 2px;"></i><span class="text-[10px] font-medium">${n.title}</span>`;
-        }
-      });
-      
-      render();
-    };
-
-    function updateLeaderboard() {
-      const myIdx = state.leaderboard.findIndex(u => u.name.includes('(나)'));
-      if(myIdx > -1) {
-         state.leaderboard[myIdx] = { ...state.leaderboard[myIdx], points: state.points, steps: state.steps, carbon: state.carbonSaved };
-      }
-      state.leaderboard.sort((a,b) => b.points - a.points);
-    }
-
-    // 포인트 지급 로직 (모달 적용)
-    window.openGrantModal = function() {
-      document.getElementById('grant-name').value = '';
-      document.getElementById('grant-points').value = '';
-      document.getElementById('grant-modal').classList.remove('hidden');
-      document.getElementById('grant-modal').classList.add('flex');
-    };
-    
-    window.closeGrantModal = function() {
-      document.getElementById('grant-modal').classList.add('hidden');
-      document.getElementById('grant-modal').classList.remove('flex');
-    };
-
-    window.submitGrant = function() {
-      const targetName = document.getElementById('grant-name').value.trim();
-      const addPoints = parseInt(document.getElementById('grant-points').value);
-      
-      if (!targetName) { showToast('이름을 입력해주세요.'); return; }
-      if (isNaN(addPoints) || addPoints <= 0) { showToast('올바른 포인트 숫자를 입력해주세요.'); return; }
-
-      const myName = savedName ? savedName : '이름없음';
-      if (targetName === myName || targetName === myName + ' (나)' || targetName === '나') {
-         state.points += addPoints;
-         updateLeaderboard();
-         saveState();
-         showToast(`본인에게 ${addPoints}P가 지급되었습니다!`);
-         closeGrantModal();
-         render();
-         return;
-      }
-
-      let user = state.leaderboard.find(u => u.name === targetName);
-      if (user) {
-         user.points += addPoints;
-      } else {
-         state.leaderboard.push({ id: Date.now(), name: targetName, points: addPoints, steps: 0, carbon: 0 });
-      }
-
-      state.leaderboard.sort((a,b) => b.points - a.points);
-      saveState();
-      showToast(`${targetName}님에게 ${addPoints}P가 지급되었습니다!`);
-      closeGrantModal();
-      render();
-    };
-
-    window.requestMission = function(missionId) {
-      if (state.todayMissions[missionId] === getTodayStr()) {
-        showToast('오늘 이미 완료한 미션입니다.\n내일 다시 참여해주세요.'); 
-        return false;
-      }
-      return true;
-    };
-
-    window.triggerCamera = function(missionId, title, points, carbon) {
-      if (!requestMission(missionId)) return;
-      state.pendingMission = { missionId, title, points, carbon };
-      document.getElementById('camera-input').click();
-    };
-
-    window.handlePhotoUpload = function(event) {
-      const file = event.target.files[0];
-      if (file && state.pendingMission) {
-        completeMission(state.pendingMission);
-        event.target.value = ''; 
-        state.pendingMission = null;
-      }
-    };
-
-    // 전용 모달을 통한 텍스트 입력 로직
-    window.handleTextMission = function(missionId, title, points, carbon) {
-      if (!requestMission(missionId)) return;
-      
-      let msg = '활동 내용을 입력해주세요.';
-      if (missionId === 'm4') msg = '어떤 페이퍼리스 활동을 하셨나요?\n(예: 태블릿으로 회의 참석, 이면지 사용 등)';
-
-      state.pendingTextMission = { missionId, title, points, carbon };
-      
-      document.getElementById('text-modal-title').innerText = title;
-      document.getElementById('text-modal-desc').innerText = msg;
-      document.getElementById('text-modal-input').value = '';
-      
-      document.getElementById('text-input-modal').classList.remove('hidden');
-      document.getElementById('text-input-modal').classList.add('flex');
-    };
-
-    window.submitTextMission = function() {
-      const text = document.getElementById('text-modal-input').value.trim();
-      if(text.length > 0) { 
-        completeMission(state.pendingTextMission);
-        closeTextModal();
-      } else { 
-        showToast('내용을 입력해야 인증이 완료됩니다.'); 
-      }
-    };
-
-    window.closeTextModal = function() {
-      document.getElementById('text-input-modal').classList.add('hidden');
-      document.getElementById('text-input-modal').classList.remove('flex');
-      state.pendingTextMission = null;
-    };
-
-    function completeMission(missionData) {
-      state.todayMissions[missionData.missionId] = getTodayStr();
-      state.points += missionData.points;
-      state.carbonSaved = +(state.carbonSaved + missionData.carbon).toFixed(3);
-      updateLeaderboard();
-      saveState();
-      showToast(`[${missionData.title}] 미션 완료!\n${missionData.points}P 및 탄소저감량 ${missionData.carbon}kg 적립완료 🌱`);
-      render();
-    }
-
-    // --- Education Modal Logic (탄소중립 실천) ---
-    const eduData = [
-      {
-        day: 2,
-        title: "경제 운전으로 도로 위의 탄소 다이어트 🚗",
-        desc: "급출발, 급가속, 급감속만 하지 않아도 연료 소모의 30%를 줄일 수 있습니다. 경인지역본부의 넓은 관할 구역을 이동할 때 가장 효과적인 방법입니다.",
-        action: "운전 시 '3급(급출발·급가속·급감속) 금지'를 실천해 보세요. 연비는 올라가고 사고 위험은 낮아집니다.",
-        tip: "트렁크에 실린 무거운 검사 장비 중 불필요한 짐만 비워도 연료가 절감됩니다."
-      },
-      {
-        day: 3,
-        title: "종이 없는(Paperless) 스마트 검사 📱",
-        desc: "검사 현장에서 종이 서류 대신 태블릿이나 스마트 기기를 적극 활용해 보세요. A4 용지 1만 장을 아끼면 나무 1그루를 살리는 것과 같습니다.",
-        action: "오늘 검사 시 출력물 대신 테블릿으로만 검사해 보세요.",
-        tip: "불가피하게 인쇄할 때는 '나눔고딕 에코' 같은 에코 폰트를 사용하면 잉크를 아낄 수 있습니다."
-      },
-      {
-       day: 4,
-        title: "점심시간, 사무실의 조용한 휴식 '소등' 💡",
-        desc: "사무실 비우는 점심시간 1시간 동안만 불을 꺼도 연간 상당량의 온실가스를 줄일 수 있습니다. 전등뿐만 아니라 모니터도 잠시 쉬게 해주세요.",
-        action: "점심 먹으러 나가기 전, 내 자리 모니터를 끄고 공용 공간 소등에 동참해 보세요.",
-        tip: "창가 쪽 자리는 자연 채광을 활용해 전등 의존도를 낮추는 것이 좋습니다."
-      },
-      {
-        day: 5,
-        title: "검사 대기 중 '공회전' 멈추기 🛑",
-        desc: "현장 도착 후 대기하거나 전화 통화를 할 때 무심코 켜둔 시동이 지구를 뜨겁게 합니다. 공회전 10분이면 약 1.5km를 주행할 수 있는 연료가 낭비됩니다.",
-        action: "차량을 세우고 1분 이상 머무를 때는 반드시 시동을 꺼주세요.",
-        tip: "겨울철이나 여름철 적정 실내 온도를 유지한 뒤 미리 시동을 끄는 습관이 중요합니다."
-      },
-      {
-        day: 6,
-        title: "내 책상 위 작은 숲, 개인 컵 사용하기 ☕",
-        desc: "사무실에서 사용하는 종이컵은 분해되는 데 20년이 걸립니다. 개인 텀블러를 사용하면 커피 맛도 변하지 않고 쓰레기도 나오지 않습니다.",
-        action: "오늘 하루 종이컵 대신 개인 컵이나 텀블러만 사용해 보세요.",
-        tip: "사사로운 습관이지만, 지사 전체가 동참하면 연간 수만 개의 종이컵을 아낄 수 있습니다."
-      },
-      {
-        day: 7,
-        title: "메일함 청소로 디지털 탄소 발자국 지우기 📧",
-        desc: "불필요한 스팸 메일과 오래된 업무 메일은 데이터 센터의 열기를 높입니다. 메일 1통당 약 4g의 탄소가 배출된다는 사실, 알고 계셨나요?",
-        action: "퇴근 전, 받은 메일함의 광고성 메일이나 오래된 첨부파일 10개만 삭제해 보세요.",
-        tip: "읽지 않는 뉴스레터는 '구독 취소'를 하는 것이 근본적인 해결책입니다."
-      },
-      {
-       day: 8,
-        title: "냉난방 온도 2도 조절의 마법 🌡️",
-        desc: "여름엔 2도 높게, 겨울엔 2도 낮게 설정하는 것만으로도 에너지 소비를 15% 이상 줄일 수 있습니다. 우리 몸도 급격한 온도 차에서 보호받을 수 있어요.",
-        action: "사무실 냉난방 온도를 정부 권장 적정 온도(여름 26도, 겨울 20도)에 맞춰 설정해 보세요.",
-        tip: "여름엔 시원한 캐주얼, 겨울엔 내복이나 가디건을 활용해 체온을 조절하세요."
-      },
-      {
-        day: 9,
-        title: "퇴근길, '전기 흡혈귀' 콘센트 뽑기 🔌",
-        desc: "사용하지 않는 가전제품의 대기 전력은 전체 가전 에너지의 10%를 차지합니다. 특히 사무실 내 개인용 충전기나 선풍기 등을 확인해 주세요.",
-        action: "퇴근 전, 내 자리 근처의 멀티탭 스위치를 끄거나 콘센트를 뽑아주세요.",
-        tip: "USB 허브나 충전 케이블은 기기가 연결되어 있지 않아도 전력을 소비합니다."
-      },
-      {
-        day: 10,
-        title: "올바른 분리배출, 자원의 선순환 ♻️",
-        desc: "검사 현장에서 나온 폐기물이나 사무실 쓰레기를 제대로 버리는 것도 탄소 중립입니다. 이물질이 묻은 플라스틱은 재활용되지 않고 탄소를 내뿜으며 소각됩니다.",
-        action: "배달 음식 용기나 음료병을 버릴 때 '비우고, 헹구고, 분리하기' 3원칙을 지켜보세요.",
-        tip: "라벨 제거가 안 된 페트병은 재활용 품질을 떨어뜨리니 꼭 라벨을 떼서 비닐전용함에 버려주세요."
-      }
-    ];
-
-    window.openEduModal = function() {
-      const currentEduWeek = Math.floor(Math.random() * eduData.length);
-      const data = eduData[currentEduWeek];
-      
-      document.getElementById('edu-content').innerHTML = `
-        <div class="text-center mb-4">
-          <span class="bg-green-100 text-green-800 text-[10px] font-bold px-3 py-1.5 rounded-full">📅 매일 실천하기</span>
-        </div>
-        <h3 class="text-lg font-bold text-gray-800 mb-3 text-center leading-snug break-keep">${data.title}</h3>
-        <p class="text-sm text-gray-600 mb-5 bg-gray-50 p-3.5 rounded-xl border border-gray-100 leading-relaxed break-keep">${data.desc}</p>
-        
-        <div class="mb-4">
-          <h4 class="text-xs font-bold text-green-700 mb-1.5 flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> 액션</h4>
-          <p class="text-sm text-gray-700 leading-relaxed break-keep">${data.action}</p>
-        </div>
-        
-        <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-100">
-          <h4 class="text-xs font-bold text-blue-700 mb-1.5 flex items-center"><i data-lucide="lightbulb" class="w-4 h-4 mr-1"></i> 한 줄 팁</h4>
-          <p class="text-xs text-gray-700 leading-relaxed break-keep">${data.tip}</p>
-        </div>
-      `;
-      lucide.createIcons();
-      document.getElementById('edu-modal').classList.remove('hidden');
-    };
-
-    window.closeEduModal = function() {
-      document.getElementById('edu-modal').classList.add('hidden');
-    };
-
-    // --- Render Functions ---
-    function renderHome() {
-      const levelInfo = getLevelInfo(state.points, state.charType);
-      const percent = getProgressPercent();
-
-      const typeStyles = {
-        type1: { border: 'border-green-200', ring: 'bg-green-400', blob: 'bg-green-100', hover: 'hover:bg-green-50' },
-        type2: { border: 'border-blue-200', ring: 'bg-blue-400', blob: 'bg-blue-100', hover: 'hover:bg-blue-50' },
-        type3: { border: 'border-indigo-200', ring: 'bg-indigo-400', blob: 'bg-indigo-100', hover: 'hover:bg-indigo-50' }
-      };
-      const ts = typeStyles[state.charType];
-
-      let charAnimation = 'animate-breath'; 
-      if(levelInfo.level === 2) charAnimation = 'animate-sway'; 
-      if(levelInfo.level === 3) charAnimation = 'animate-float'; 
-      if(levelInfo.level === 4) charAnimation = 'animate-bounce-slow scale-110';
-
-      return `
-        <div class="flex flex-col items-center p-6 space-y-6 animate-in">
-          <div class="w-full bg-white rounded-2xl p-6 shadow-sm border border-green-100 flex flex-col items-center">
-            <div class="flex justify-between w-full items-center mb-2">
-              <h2 class="text-lg font-bold text-gray-700">에코 캐릭터</h2>
-              <span class="text-[10px] text-gray-400">클릭하여 변경</span>
-            </div>
-            
-            <div onclick="openCharacterModal()" class="cursor-pointer relative w-40 h-40 bg-white flex items-center justify-center mb-4 border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0">
-              <div class="absolute inset-0 rounded-full ${ts.ring} animate-pulse-ring z-[-2]"></div>
-              ${levelInfo.level >= 3 ? `<div class="absolute inset-0 ${ts.blob} opacity-60 animate-spin-slow z-[-1]" style="border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;"></div>` : ''}
-              <span class="text-7xl select-none inline-block ${charAnimation} transition-transform duration-500">${levelInfo.emoji}</span>
-              ${levelInfo.level === 4 ? `<div class="absolute -top-1 -right-1 bg-yellow-400 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow z-10"><i data-lucide="award" class="mr-1 w-3 h-3 inline"></i>완성!</div>` : ''}
-            </div>
-
-            <div class="text-center w-full">
-              <div class="flex justify-between items-end mb-1">
-                <span class="font-bold text-xl ${levelInfo.color}">Lv.${levelInfo.level} ${levelInfo.name}</span>
-                <span class="text-sm text-gray-500">${state.points} / ${levelInfo.level === 4 ? 'MAX' : `${levelInfo.max} P`}</span>
-              </div>
-              <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full bg-green-500 transition-all duration-1000 ease-out" style="width: ${percent}%;"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="w-full grid grid-cols-2 gap-4">
-            <div onclick="openEduModal()" class="cursor-pointer bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-300 flex flex-col items-center justify-center hover:bg-emerald-100 transition-colors">
-              <i data-lucide="book-open-check" class="text-emerald-600 mb-2 w-7 h-7"></i>
-              <span class="text-[11px] text-emerald-700 font-medium">지구를 위한</span>
-              <span class="text-[15px] font-bold text-emerald-900">탄소중립 실천</span>
-            </div>
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center text-center">
-              <i data-lucide="leaf" class="text-green-500 mb-2 w-7 h-7"></i>
-              <span class="text-[11px] text-gray-500 font-medium">나의 누적 탄소저감</span>
-              <span class="text-[15px] font-bold text-gray-800">${state.carbonSaved} kg</span>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderMissions() {
-      const getActionBtn = (id, title, points, carbon, type, btnClass, textClass, customText) => {
-        const isDone = state.todayMissions[id] === getTodayStr();
-        if (isDone) {
-          return `<button disabled class="w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold flex justify-center items-center"><i data-lucide="check-circle" class="mr-2 w-3.5 h-3.5"></i> 오늘 참여 완료</button>`;
-        }
-        
-        let onClickFn = '';
-        let iconName = '';
-        let btnText = customText || '';
-        let disabledAttr = '';
-        let extraClass = '';
-
-        if (type === 'text') {
-          onClickFn = `handleTextMission('${id}', '${title}', ${points}, ${carbon}')`;
-          iconName = 'message-square';
-          btnText = btnText || '내용 입력 인증';
-        } else if (type === 'report') {
-          onClickFn = ''; 
-          iconName = 'megaphone';
-          btnText = btnText || '담당자에게 신고';
-          disabledAttr = 'disabled';
-          extraClass = 'opacity-50 cursor-not-allowed';
-        } else if (type === 'qr') {
-          onClickFn = "showToast('스마트폰 기본 카메라 앱을 열고 장비실에 부착된 QR코드를 스캔해주세요!')";
-          iconName = 'qr-code';
-          btnText = btnText || 'QR 스캔 방법';
-        } else {
-          onClickFn = `triggerCamera('${id}', '${title}', ${points}, ${carbon}')`;
-          iconName = 'camera';
-          btnText = btnText || '사진 인증';
-        }
-        
-        return `<button ${disabledAttr} ${onClickFn ? `onclick="${onClickFn}"` : ''} class="w-full ${btnClass} ${textClass} ${extraClass} py-2 rounded-xl text-xs font-bold flex justify-center items-center transition-colors cursor-pointer"><i data-lucide="${iconName}" class="mr-1.5 w-3.5 h-3.5"></i> ${btnText}</button>`;
-      };
-
-      return `
-        <div class="p-5 space-y-3 animate-in pb-10">
-          <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center">
-            <i data-lucide="list-todo" class="mr-2 text-green-600 w-5 h-5"></i>진행중인 미션
-          </h2>
-          
-          <!-- 미션 1 (에너지지킴이 서약) -->
-          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-2">
-              <div class="flex items-center"><div class="w-8 h-8 bg-rose-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="shield-check" class="text-rose-500 w-4 h-4"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-[13px]">모두의 에너지지킴이 서약 <span class="font-normal text-gray-400 text-[9px]">(1회성)</span></h3></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+50P</div>
-            </div>
-            ${state.pledgeCompleted ? 
-              `<button disabled class="w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold flex justify-center items-center"><i data-lucide="check-circle" class="mr-2 w-3.5 h-3.5"></i> 참여 완료</button>` : 
-              `<button onclick="openPledgeModal()" class="w-full bg-rose-50 text-rose-600 py-2 rounded-xl text-xs font-bold flex justify-center items-center hover:bg-rose-100 transition-colors cursor-pointer"><i data-lucide="check-square" class="mr-1.5 w-3.5 h-3.5"></i> 서약하기</button>`
-            }
-          </div>
-
-          <!-- 미션 (폐배터리 수거 - QR 인증으로 변경됨) -->
-          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-2">
-              <div class="flex items-center"><div class="w-8 h-8 bg-yellow-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="battery" class="text-yellow-500 w-4 h-4"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-[13px]">폐배터리 수거</h3><p class="text-[9px] text-gray-500 mt-0.5">저감량: 0.1kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+50P</div>
-            </div>
-            <p class="text-[11px] text-gray-500 mb-3 px-1 truncate">장비실에 폐배터리 수거 후 QR코드를 스캔하세요.</p>
-            ${getActionBtn('m8', '폐배터리 수거', 50, 0.1, 'qr', 'bg-yellow-50', 'text-yellow-700', 'QR 스캔 방법안내')}
-          </div>
-
-          <!-- 미션 2 (페이퍼리스) -->
-          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-2">
-              <div class="flex items-center"><div class="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="file-text" class="text-purple-500 w-4 h-4"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-[13px]">페이퍼리스 <span class="font-normal text-gray-400 text-[9px]">(예 : 이면지 사용)</span></h3><p class="text-[9px] text-gray-500 mt-0.5">저감량: 0.029kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+30P</div>
-            </div>
-            ${getActionBtn('m4', '페이퍼리스', 30, 0.029, 'text', 'bg-purple-50', 'text-purple-600')}
-          </div>
-
-          <!-- 미션 3 (계단 이용) -->
-          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-2">
-              <div class="flex items-center"><div class="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="footprints" class="text-blue-500 w-4 h-4"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-[13px]">사무실 출입 시 계단 이용</h3><p class="text-[9px] text-gray-500 mt-0.5">저감량: 0.032kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+20P</div>
-            </div>
-            ${getActionBtn('m1', '사무실 출입 시 계단 이용', 20, 0.032, 'camera', 'bg-blue-50', 'text-blue-600')}
-          </div>
-
-          <!-- 미션 (퇴근 전 콘센트 미차단 신고) -->
-          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-2">
-              <div class="flex items-center"><div class="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="plug" class="text-red-500 w-4 h-4"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-[13px]">퇴근 전 콘센트 미차단 신고</h3><p class="text-[9px] text-gray-500 mt-0.5">저감량: 0.1kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+20P</div>
-            </div>
-            ${getActionBtn('m7', '퇴근 전 콘센트 미차단 신고', 20, 0.1, 'camera', 'bg-red-50', 'text-red-600')}
-          </div>
-
-          <!-- 미션 5 (다회용컵 이용) -->
-          <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-            <div class="flex justify-between mb-2">
-              <div class="flex items-center"><div class="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center mr-3"><i data-lucide="coffee" class="text-orange-500 w-4 h-4"></i></div>
-              <div><h3 class="font-bold text-gray-800 text-[13px]">다회용컵 이용</h3><p class="text-[9px] text-gray-500 mt-0.5">저감량: 0.05kg</p></div></div>
-              <div class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+15P</div>
-            </div>
-            ${getActionBtn('m3', '다회용컵 이용', 15, 0.05, 'camera', 'bg-orange-50', 'text-orange-600')}
-          </div>
-
-        </div>
-      `;
-    }
-
-    function renderForest() {
-      const safeTotal = state.leaderboard.reduce((sum, user) => sum + (user.carbon || 0), 0);
-      const equivalentTrees = (safeTotal / 6.6).toFixed(1);
-
-      return `
-        <div class="p-6 space-y-6 animate-in pb-12">
-          <div class="bg-green-50 rounded-2xl p-5 shadow-sm border border-green-200 flex items-center justify-between">
-            <div class="pr-2">
-              <h2 class="font-extrabold text-green-800 text-base mb-1">실제 나무 심기 효과</h2>
-              <p class="text-[10px] text-green-600">국립산림과학원 기준</p>
-              <p class="text-xs text-gray-600 mt-1">지사 총 탄소저감: ${safeTotal.toFixed(1)}kg</p>
-            </div>
-            <div class="flex flex-col items-center">
-              <span class="text-3xl mb-1">🌲</span>
-              <span class="font-extrabold text-sm text-green-700 bg-white px-2 py-1 rounded-full shadow-sm whitespace-nowrap">
-                약 ${equivalentTrees} 그루
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <div class="flex justify-between items-end mb-4">
-              <h3 class="text-lg font-bold text-gray-800 flex items-center"><i data-lucide="trophy" class="mr-2 text-yellow-500 w-5 h-5"></i>지사원 랭킹</h3>
-              <button onclick="openGrantModal()" class="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-100 font-bold hover:bg-indigo-100 transition-colors flex items-center cursor-pointer">
-                <i data-lucide="gift" class="w-3 h-3 mr-1"></i>포인트 지급/선물
-              </button>
-            </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              ${state.leaderboard.map((user, idx) => `
-                <div class="flex items-center justify-between p-4 ${idx === 0 ? 'bg-green-50 border-b border-gray-100' : 'border-b border-gray-50 last:border-0'}">
-                  <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}">${idx + 1}</div>
-                    <div>
-                      <div class="font-bold text-gray-800 text-sm">${user.name}</div>
-                      <div class="text-[10px] text-gray-500">${user.steps.toLocaleString()}보</div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="font-bold text-green-600">${user.points}P</div>
-                    <div class="text-lg">${getLevelInfo(user.points, 'type1').emoji}</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function render() {
-      const contentDiv = document.getElementById('app-content');
-      if (state.activeTab === 'home') contentDiv.innerHTML = renderHome();
-      else if (state.activeTab === 'missions') contentDiv.innerHTML = renderMissions();
-      else if (state.activeTab === 'forest') contentDiv.innerHTML = renderForest();
+    // 초기 로딩용
+    if (window.lucide) {
       lucide.createIcons();
     }
-
-    checkOnboarding();
-    checkUrlForMission(); // 앱 실행 시 QR코드 URL 체크 로직 실행
-    render();
-    switchTab('home'); 
-    lucide.createIcons();
   </script>
 </body>
 </html>
