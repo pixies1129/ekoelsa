@@ -161,11 +161,10 @@ export default function Page() {
 
   return (
     <div className="w-full max-w-md bg-white app-container sm:rounded-[2.5rem] shadow-2xl relative flex flex-col overflow-hidden sm:border-[6px] sm:border-gray-200" suppressHydrationWarning>
-      <Header />
-      
-      <main className="flex-1 overflow-y-auto pb-6">
-        {mounted && (
-          <>
+      {mounted ? (
+        <>
+          <Header />
+          <main className="flex-1 overflow-y-auto pb-6">
             {activeTab === 'home' && (
               <HomeTab 
                 profile={user} 
@@ -192,14 +191,9 @@ export default function Page() {
                 onOpenGrantModal={() => setModals(prev => ({ ...prev, grant: true }))}
               />
             )}
-          </>
-        )}
-      </main>
-
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {mounted && (
-        <>
+          </main>
+          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          
           <OnboardingModal isOpen={modals.onboarding} onSave={handleOnboard} />
           <CharacterModal 
             isOpen={modals.character} 
@@ -233,6 +227,13 @@ export default function Page() {
           />
           <Toast message={toastMessage} onClose={() => setToastMessage('')} />
         </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center bg-white">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full mb-4"></div>
+            <div className="h-4 w-24 bg-gray-100 rounded"></div>
+          </div>
+        </div>
       )}
 
       <input 
