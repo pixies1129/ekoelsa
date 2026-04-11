@@ -29,12 +29,12 @@ const verifyToken = async (req, res, next) => {
     return res.status(401).json({ error: 'No token provided' });
   }
 
-  const userName = await redis.get(`token:${token}`);
-  if (!userName) {
+  const empId = await redis.get(`token:${token}`);
+  if (!empId) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
-  req.userName = userName;
+  req.empId = empId;
   next();
 };
 
@@ -49,40 +49,41 @@ const todayMissions = [
 
 // 1. 사용자 온보딩
 app.post('/api/users/onboard', async (req, res) => {
-  const { userName, charType, password } = req.body;
-  const userKey = `user:${userName}`;
+  const { userName, empId, charType, password } = req.body;
+  const userKey = `user:${empId}`;
   
   const exists = await redis.exists(userKey);
   if (!exists) {
     // Redis Hash로 사용자 정보 저장
     await redis.hset(userKey, {
       userName,
+      empId,
       charType,
       password, // 실제 서비스에서는 해싱 필수
       points: 0,
       carbonSaved: 0
     });
     // 랭킹 (Sorted Set) 초기화
-    await redis.zadd('rankings', 0, userName);
+    await redis.zadd('rankings', 0, empId);
   }
   res.status(201).json({ message: 'Success' });
 });
 
 // 2. 로그인
 app.post('/api/auth/login', async (req, res) => {
-  const { userName, password } = req.body;
-  const userKey = `user:${userName}`;
+  const { empId, password } = req.body;
+  const userKey = `user:${empId}`;
   
   const user = await redis.hgetall(userKey);
   if (Object.keys(user).length === 0 || user.password !== password) {
-    return res.status(401).json({ error: 'Invalid username or password' });
+    return res.status(401).json({ error: 'Invalid ID or password' });
   }
 
   const token = uuidv4();
   // 토큰 24시간 유효
-  await redis.set(`token:${token}`, userName, 'EX', 86400);
+  await redis.set(`token:${token}`, empId, 'EX', 86400);
   
-  res.json({ token, userName });
+  res.json({ token, empId, userName: user.userName });
 });
 
 // 3. 로그아웃
@@ -96,8 +97,8 @@ app.post('/api/auth/logout', verifyToken, async (req, res) => {
 
 // 4. 프로필 조회 (보호됨)
 app.get('/api/users/me', verifyToken, async (req, res) => {
-  const userName = req.userName;
-  const userKey = `user:${userName}`;
+  const empId = req.empId;
+  const userKey = `user:${empId}`;
   const user = await redis.hgetall(userKey);
   
   if (Object.keys(user).length > 0) {
@@ -119,12 +120,12 @@ app.get('/api/missions', (req, res) => {
 app.post('/api/missions/:id/verify', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
-  const userName = req.userName;
+  const empId = req.empId;
   const mission = todayMissions.find(m => m.id === id);
 
   if (!mission) return res.status(400).json({ error: 'Mission not found' });
 
-  const userKey = `user:${userName}`;
+  const userKey = `user:${empId}`;
   const exists = await redis.exists(userKey);
 
   if (exists) {
@@ -137,12 +138,12 @@ app.post('/api/missions/:id/verify', verifyToken, async (req, res) => {
     await redis.hset(userKey, 'carbonSaved', newCarbon);
 
     // 3. 랭킹 업데이트
-    await redis.zadd('rankings', newPoints, userName);
+    await redis.zadd('rankings', newPoints, empId);
 
     // (선택사항) 인증 기록 저장 로직을 여기에 추가할 수 있습니다.
-    console.log(`[Mission] ${userName} completed ${mission.title}: ${content}`);
+    console.log(`[Mission] ${empId} completed ${mission.title}: ${content}`);
 
-    res.json({ userName, points: newPoints, carbonSaved: newCarbon });
+    res.json({ empId, points: newPoints, carbonSaved: newCarbon });
   } else {
     res.status(404).json({ error: 'User not found' });
   }
@@ -155,15 +156,16 @@ app.get('/api/rankings', async (req, res) => {
   
   const rankings = [];
   for (let i = 0; i < rawRankings.length; i += 2) {
-    const userName = rawRankings[i];
+    const empId = rawRankings[i];
     const points = parseInt(rawRankings[i + 1]);
-    const charType = await redis.hget(`user:${userName}`, 'charType') || 'type1';
+    const user = await redis.hgetall(`user:${empId}`);
     
     rankings.push({
       rank: (i / 2) + 1,
-      userName,
+      empId,
+      userName: user.userName || 'Unknown',
       points,
-      charType
+      charType: user.charType || 'type1'
     });
   }
   res.json(rankings);
@@ -171,8 +173,8 @@ app.get('/api/rankings', async (req, res) => {
 
 // 8. 포인트 선물 (보호됨)
 app.post('/api/points/gift', verifyToken, async (req, res) => {
-  const { to, points } = req.body;
-  const from = req.userName;
+  const { to, points } = req.body; // to is now empId
+  const from = req.empId;
   const senderKey = `user:${from}`;
   const receiverKey = `user:${to}`;
 
