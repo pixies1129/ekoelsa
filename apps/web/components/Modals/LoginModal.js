@@ -4,7 +4,7 @@ import { useState } from 'react';
 import * as api from '@/lib/api';
 
 export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister }) {
-  const [userName, setUserName] = useState('');
+  const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,8 +13,8 @@ export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!userName || !password) {
-      setError('이름과 비밀번호를 모두 입력해주세요.');
+    if (!empId || !password) {
+      setError('사번과 비밀번호를 모두 입력해주세요.');
       return;
     }
 
@@ -22,9 +22,9 @@ export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister 
     setError('');
 
     try {
-      const response = await api.login(userName, password);
+      const response = await api.login(empId, password);
       sessionStorage.setItem('eko_token', response.token);
-      onLoginSuccess(userName);
+      onLoginSuccess(empId);
     } catch (err) {
       setError(err.info?.message || '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -45,12 +45,12 @@ export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister 
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">사용자 이름</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">사번</label>
             <input 
               type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="성명을 입력하세요"
+              value={empId}
+              onChange={(e) => setEmpId(e.target.value)}
+              placeholder="사번을 입력하세요"
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
             />
           </div>

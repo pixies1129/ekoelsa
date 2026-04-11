@@ -5,6 +5,7 @@ import * as api from '@/lib/api';
 
 export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLogin }) {
   const [userName, setUserName] = useState('');
+  const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +16,7 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!userName || !password || !confirmPassword) {
+    if (!userName || !empId || !password || !confirmPassword) {
       setError('모든 필드를 입력해주세요.');
       return;
     }
@@ -29,10 +30,10 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
     setError('');
 
     try {
-      // onboardUser(userName, charType, password)
+      // onboardUser(userName, empId, charType, password)
       // charType is set to 'type1' by default as per requirements
-      await api.onboardUser(userName, 'type1', password);
-      onRegisterSuccess(userName);
+      await api.onboardUser(userName, empId, 'type1', password);
+      onRegisterSuccess(empId);
     } catch (err) {
       setError(err.info?.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -59,6 +60,16 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               placeholder="성명을 입력하세요"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">사번 (Employee ID)</label>
+            <input 
+              type="text"
+              value={empId}
+              onChange={(e) => setEmpId(e.target.value)}
+              placeholder="사번을 입력하세요"
               className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
             />
           </div>
