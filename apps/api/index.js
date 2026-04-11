@@ -10,8 +10,16 @@ app.use(cors({
 app.use(express.json());
 
 // REDIS_URL 환경변수를 사용하여 Redis 클라이언트 생성
-// REDIS_URL 예: redis://default:password@host:port
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+redis.on('connect', () => {
+  console.log('✅ Redis connection established successfully.');
+});
+
+redis.on('error', (err) => {
+  console.error('❌ Redis connection error:', err.message);
+  console.error('   Please make sure your Redis server is running.');
+});
 
 // 고정된 미션 데이터
 const todayMissions = [
@@ -66,7 +74,7 @@ app.get('/api/missions', (req, res) => {
 // 4. 미션 인증
 app.post('/api/missions/:id/verify', async (req, res) => {
   const { id } = req.params;
-  const { userName } = req.body;
+  const { userName, content } = req.body; // content (인증 내용) 추가
   const mission = todayMissions.find(m => m.id === id);
 
   if (!mission) return res.status(400).json({ error: 'Mission not found' });
@@ -78,13 +86,16 @@ app.post('/api/missions/:id/verify', async (req, res) => {
     // 1. 포인트 증가
     const newPoints = await redis.hincrby(userKey, 'points', mission.points);
     
-    // 2. 탄소 저감량 증가
+    // 2. 탄소 저감량 증가 (부동 소수점 오차 방지)
     const currentCarbon = await redis.hget(userKey, 'carbonSaved') || 0;
-    const newCarbon = +(parseFloat(currentCarbon) + mission.carbon).toFixed(3);
+    const newCarbon = parseFloat((parseFloat(currentCarbon) + mission.carbon).toFixed(3));
     await redis.hset(userKey, 'carbonSaved', newCarbon);
 
     // 3. 랭킹 업데이트
     await redis.zadd('rankings', newPoints, userName);
+
+    // (선택사항) 인증 기록 저장 로직을 여기에 추가할 수 있습니다.
+    console.log(`[Mission] ${userName} completed ${mission.title}: ${content}`);
 
     res.json({ userName, points: newPoints, carbonSaved: newCarbon });
   } else {
