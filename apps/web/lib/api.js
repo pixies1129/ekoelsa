@@ -27,10 +27,10 @@ async function fetcher(endpoint, options = {}) {
   return res.json();
 }
 
-export const login = (userName, password) =>
+export const login = (empId, password) =>
   fetcher('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ userName, password }),
+    body: JSON.stringify({ empId, password }),
   });
 
 export const logout = (token) =>
@@ -41,25 +41,25 @@ export const logout = (token) =>
 
 export const fetchMissions = () => fetcher('/missions');
 
-export const onboardUser = (userName, charType, password) =>
+export const onboardUser = (userName, empId, charType, password) =>
   fetcher('/users/onboard', {
     method: 'POST',
-    body: JSON.stringify({ userName, charType, password }),
+    body: JSON.stringify({ userName, empId, charType, password }),
   });
 
-export const getUserProfile = (userName) =>
-  fetcher(`/users/me?userName=${encodeURIComponent(userName)}`);
+export const getUserProfile = (empId) =>
+  fetcher(`/users/me?empId=${encodeURIComponent(empId)}`);
 
-export const verifyMission = (missionId, userName, content) =>
+export const verifyMission = (missionId, empId, content) =>
   fetcher(`/missions/${missionId}/verify`, {
     method: 'POST',
-    body: JSON.stringify({ userName, content }),
+    body: JSON.stringify({ empId, content }),
   });
 
 export const getRankings = () => fetcher('/rankings');
 
-export const giftPoints = (from, to, points) =>
+export const giftPoints = (toEmpId, points) =>
   fetcher('/points/gift', {
     method: 'POST',
-    body: JSON.stringify({ from, to, points }),
+    body: JSON.stringify({ to: toEmpId, points }),
   });
