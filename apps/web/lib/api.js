@@ -41,10 +41,10 @@ export const logout = (token) =>
 
 export const fetchMissions = () => fetcher('/missions');
 
-export const onboardUser = (userName, charType) =>
+export const onboardUser = (userName, charType, password) =>
   fetcher('/users/onboard', {
     method: 'POST',
-    body: JSON.stringify({ userName, charType }),
+    body: JSON.stringify({ userName, charType, password }),
   });
 
 export const getUserProfile = (userName) =>
