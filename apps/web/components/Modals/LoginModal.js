@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import * as api from '@/lib/api';
 
-export default function LoginModal({ isOpen, onLoginSuccess }) {
+export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister }) {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -85,7 +85,17 @@ export default function LoginModal({ isOpen, onLoginSuccess }) {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-gray-400 font-medium">
+        <div className="mt-6 text-center">
+          <button 
+            type="button"
+            onClick={onSwitchToRegister}
+            className="text-sm text-gray-500 hover:text-green-600 font-bold transition-colors"
+          >
+            계정이 없으신가요? <span className="underline decoration-2 underline-offset-4">회원가입하기</span>
+          </button>
+        </div>
+
+        <p className="mt-8 text-center text-xs text-gray-400 font-medium border-t border-gray-100 pt-6">
           본 애플리케이션은 한국승강기안전공단 인천서부지사<br/>임직원 전용 서비스입니다.
         </p>
       </div>
