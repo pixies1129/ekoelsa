@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const Redis = require('ioredis'); // ioredis 라이브러리 사용
+const { v4: uuidv4 } = require('uuid');
 const app = express();
 
 app.use(cors({
@@ -21,6 +22,22 @@ redis.on('error', (err) => {
   console.error('   Please make sure your Redis server is running.');
 });
 
+// Middleware: 토큰 검증
+const verifyToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  const userName = await redis.get(`token:${token}`);
+  if (!userName) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  req.userName = userName;
+  next();
+};
+
 // 고정된 미션 데이터
 const todayMissions = [
   { id: 'm1', title: '계단 이용', points: 20, carbon: 0.032, type: 'photo' },
@@ -32,7 +49,7 @@ const todayMissions = [
 
 // 1. 사용자 온보딩
 app.post('/api/users/onboard', async (req, res) => {
-  const { userName, charType } = req.body;
+  const { userName, charType, password } = req.body;
   const userKey = `user:${userName}`;
   
   const exists = await redis.exists(userKey);
@@ -41,6 +58,7 @@ app.post('/api/users/onboard', async (req, res) => {
     await redis.hset(userKey, {
       userName,
       charType,
+      password, // 실제 서비스에서는 해싱 필수
       points: 0,
       carbonSaved: 0
     });
@@ -50,9 +68,35 @@ app.post('/api/users/onboard', async (req, res) => {
   res.status(201).json({ message: 'Success' });
 });
 
-// 2. 프로필 조회
-app.get('/api/users/me', async (req, res) => {
-  const { userName } = req.query;
+// 2. 로그인
+app.post('/api/auth/login', async (req, res) => {
+  const { userName, password } = req.body;
+  const userKey = `user:${userName}`;
+  
+  const user = await redis.hgetall(userKey);
+  if (Object.keys(user).length === 0 || user.password !== password) {
+    return res.status(401).json({ error: 'Invalid username or password' });
+  }
+
+  const token = uuidv4();
+  // 토큰 24시간 유효
+  await redis.set(`token:${token}`, userName, 'EX', 86400);
+  
+  res.json({ token, userName });
+});
+
+// 3. 로그아웃
+app.post('/api/auth/logout', verifyToken, async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    await redis.del(`token:${token}`);
+  }
+  res.json({ message: 'Logged out successfully' });
+});
+
+// 4. 프로필 조회 (보호됨)
+app.get('/api/users/me', verifyToken, async (req, res) => {
+  const userName = req.userName;
   const userKey = `user:${userName}`;
   const user = await redis.hgetall(userKey);
   
@@ -66,15 +110,16 @@ app.get('/api/users/me', async (req, res) => {
   }
 });
 
-// 3. 미션 목록 조회
+// 5. 미션 목록 조회
 app.get('/api/missions', (req, res) => {
   res.json(todayMissions);
 });
 
-// 4. 미션 인증
-app.post('/api/missions/:id/verify', async (req, res) => {
+// 6. 미션 인증 (보호됨)
+app.post('/api/missions/:id/verify', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { userName, content } = req.body; // content (인증 내용) 추가
+  const { content } = req.body;
+  const userName = req.userName;
   const mission = todayMissions.find(m => m.id === id);
 
   if (!mission) return res.status(400).json({ error: 'Mission not found' });
@@ -103,7 +148,7 @@ app.post('/api/missions/:id/verify', async (req, res) => {
   }
 });
 
-// 5. 랭킹 조회 (Sorted Set 역순 정렬)
+// 7. 랭킹 조회 (Sorted Set 역순 정렬)
 app.get('/api/rankings', async (req, res) => {
   // 포인트 높은 순(Desc)으로 상위 50명 조회
   const rawRankings = await redis.zrevrange('rankings', 0, 49, 'WITHSCORES');
@@ -124,9 +169,10 @@ app.get('/api/rankings', async (req, res) => {
   res.json(rankings);
 });
 
-// 6. 포인트 선물
-app.post('/api/points/gift', async (req, res) => {
-  const { from, to, points } = req.body;
+// 8. 포인트 선물 (보호됨)
+app.post('/api/points/gift', verifyToken, async (req, res) => {
+  const { to, points } = req.body;
+  const from = req.userName;
   const senderKey = `user:${from}`;
   const receiverKey = `user:${to}`;
 
