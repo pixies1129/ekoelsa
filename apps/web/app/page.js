@@ -8,7 +8,7 @@ import MissionsTab from '@/components/Tabs/MissionsTab';
 import RankingTab from '@/components/Tabs/RankingTab';
 import Toast from '@/components/Toast';
 
-import OnboardingModal from '@/components/Modals/OnboardingModal';
+import RegisterModal from '@/components/Modals/RegisterModal';
 import CharacterModal from '@/components/Modals/CharacterModal';
 import PledgeModal from '@/components/Modals/PledgeModal';
 import EduModal from '@/components/Modals/EduModal';
@@ -29,7 +29,7 @@ export default function Page() {
   
   const [modals, setModals] = useState({
     login: false,
-    onboarding: false,
+    register: false,
     character: false,
     pledge: false,
     edu: false,
@@ -64,7 +64,7 @@ export default function Page() {
     } else if (savedName) {
       loadUserProfile(savedName);
     } else {
-      setModals(prev => ({ ...prev, onboarding: true }));
+      setModals(prev => ({ ...prev, login: true }));
     }
 
     const savedTodayMissions = localStorage.getItem('eko_todayMissions');
@@ -100,7 +100,7 @@ export default function Page() {
       refreshRankings();
     } catch (error) {
       if (error.status === 404) {
-        setModals(prev => ({ ...prev, onboarding: true }));
+        setModals(prev => ({ ...prev, register: true }));
       }
     }
   };
@@ -134,16 +134,17 @@ export default function Page() {
     }
   };
 
-  const handleOnboard = async (userName) => {
-    try {
-      await api.onboardUser(userName, 'type1');
-      localStorage.setItem('eko_userName', userName);
-      setModals(prev => ({ ...prev, onboarding: false }));
-      loadUserProfile(userName);
-      setToastMessage(`${userName}님, 환영합니다!`);
-    } catch (error) {
-      setToastMessage('이미 등록된 이름이거나 오류가 발생했습니다.');
-    }
+  const handleRegisterSuccess = (userName) => {
+    setModals(prev => ({ ...prev, register: false, login: true }));
+    setToastMessage(`${userName}님, 회원가입이 완료되었습니다! 로그인해주세요.`);
+  };
+
+  const handleSwitchToRegister = () => {
+    setModals(prev => ({ ...prev, login: false, register: true }));
+  };
+
+  const handleSwitchToLogin = () => {
+    setModals(prev => ({ ...prev, register: false, login: true }));
   };
 
   const handleMissionComplete = async (mission, content = '인증 완료') => {
@@ -222,7 +223,11 @@ export default function Page() {
           </main>
           <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
           
-          <OnboardingModal isOpen={modals.onboarding} onSave={handleOnboard} />
+          <RegisterModal 
+            isOpen={modals.register} 
+            onRegisterSuccess={handleRegisterSuccess} 
+            onSwitchToLogin={handleSwitchToLogin}
+          />
           <CharacterModal 
             isOpen={modals.character} 
             currentChar={user?.charType}
@@ -256,6 +261,7 @@ export default function Page() {
           <LoginModal 
             isOpen={modals.login}
             onLoginSuccess={handleLoginSuccess}
+            onSwitchToRegister={handleSwitchToRegister}
           />
           <Toast message={toastMessage} onClose={() => setToastMessage('')} />
         </>
