@@ -14,6 +14,7 @@ import PledgeModal from '@/components/Modals/PledgeModal';
 import EduModal from '@/components/Modals/EduModal';
 import TextInputModal from '@/components/Modals/TextInputModal';
 import GrantModal from '@/components/Modals/GrantModal';
+import LoginModal from '@/components/Modals/LoginModal';
 
 import * as api from '@/lib/api';
 
@@ -27,6 +28,7 @@ export default function Page() {
   const [toastMessage, setToastMessage] = useState('');
   
   const [modals, setModals] = useState({
+    login: false,
     onboarding: false,
     character: false,
     pledge: false,
@@ -54,8 +56,12 @@ export default function Page() {
 
     init();
 
+    const token = sessionStorage.getItem('eko_token');
     const savedName = localStorage.getItem('eko_userName');
-    if (savedName) {
+
+    if (!token) {
+      setModals(prev => ({ ...prev, login: true }));
+    } else if (savedName) {
       loadUserProfile(savedName);
     } else {
       setModals(prev => ({ ...prev, onboarding: true }));
@@ -104,6 +110,28 @@ export default function Page() {
       const rankingsData = await api.getRankings();
       setRankings(rankingsData);
     } catch (error) {}
+  };
+
+  const handleLoginSuccess = (userName) => {
+    setModals(prev => ({ ...prev, login: false }));
+    localStorage.setItem('eko_userName', userName);
+    loadUserProfile(userName);
+    setToastMessage(`${userName}님, 환영합니다!`);
+  };
+
+  const handleLogout = async () => {
+    const token = sessionStorage.getItem('eko_token');
+    try {
+      await api.logout(token);
+    } catch (e) {
+      console.error('Logout failed:', e);
+    } finally {
+      sessionStorage.removeItem('eko_token');
+      localStorage.removeItem('eko_userName');
+      setUser(null);
+      setModals(prev => ({ ...prev, login: true }));
+      setToastMessage('로그아웃 되었습니다.');
+    }
   };
 
   const handleOnboard = async (userName) => {
@@ -163,7 +191,7 @@ export default function Page() {
     <div className="w-full max-w-md bg-white app-container sm:rounded-[2.5rem] shadow-2xl relative flex flex-col overflow-hidden sm:border-[6px] sm:border-gray-200" suppressHydrationWarning>
       {mounted ? (
         <>
-          <Header />
+          <Header onLogout={handleLogout} />
           <main className="flex-1 overflow-y-auto pb-6">
             {activeTab === 'home' && (
               <HomeTab 
@@ -224,6 +252,10 @@ export default function Page() {
             isOpen={modals.grant}
             onClose={() => setModals(prev => ({ ...prev, grant: false }))}
             onSubmit={handleGrant}
+          />
+          <LoginModal 
+            isOpen={modals.login}
+            onLoginSuccess={handleLoginSuccess}
           />
           <Toast message={toastMessage} onClose={() => setToastMessage('')} />
         </>

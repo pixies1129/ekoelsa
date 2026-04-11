@@ -1,8 +1,8 @@
 'use client';
 
-import { Leaf } from 'lucide-react';
+import { Leaf, LogOut } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ onLogout }) {
   return (
     <header className="bg-white pt-12 sm:pt-8 pb-4 px-6 shrink-0 z-10 border-b border-gray-100">
       <div className="flex justify-between items-start">
@@ -13,7 +13,16 @@ export default function Header() {
           </h1>
           <p className="text-xs text-gray-500 mt-1.5 ml-1">인천서부지사</p>
         </div>
-        <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" className="h-8 object-contain mt-1.5" referrerPolicy="no-referrer" />
+        <div className="flex items-center gap-3 mt-1.5">
+          <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" className="h-8 object-contain" referrerPolicy="no-referrer" />
+          <button 
+            onClick={onLogout}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-red-500"
+            title="로그아웃"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
       </div>
     </header>
   );
