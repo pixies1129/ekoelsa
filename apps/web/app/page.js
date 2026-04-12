@@ -57,12 +57,12 @@ export default function Page() {
     init();
 
     const token = sessionStorage.getItem('eko_token');
-    const savedName = localStorage.getItem('eko_userName');
+    const savedEmpId = localStorage.getItem('eko_empId');
 
     if (!token) {
       setModals(prev => ({ ...prev, login: true }));
-    } else if (savedName) {
-      loadUserProfile(savedName);
+    } else if (savedEmpId) {
+      loadUserProfile(savedEmpId);
     } else {
       setModals(prev => ({ ...prev, login: true }));
     }
@@ -93,9 +93,9 @@ export default function Page() {
     }
   }, [user, missions, todayMissions]);
 
-  const loadUserProfile = async (userName) => {
+  const loadUserProfile = async (empId) => {
     try {
-      const profile = await api.getUserProfile(userName);
+      const profile = await api.getUserProfile(empId);
       setUser(profile);
       refreshRankings();
     } catch (error) {
@@ -112,11 +112,15 @@ export default function Page() {
     } catch (error) {}
   };
 
-  const handleLoginSuccess = (userName) => {
+  const handleLoginSuccess = (empId, userName) => {
     setModals(prev => ({ ...prev, login: false }));
-    localStorage.setItem('eko_userName', userName);
-    loadUserProfile(userName);
-    setToastMessage(`${userName}님, 환영합니다!`);
+    localStorage.setItem('eko_empId', empId);
+    loadUserProfile(empId);
+    if (userName) {
+      setToastMessage(`${userName}님, 환영합니다!`);
+    } else {
+      setToastMessage(`환영합니다!`);
+    }
   };
 
   const handleLogout = async () => {
@@ -127,7 +131,7 @@ export default function Page() {
       console.error('Logout failed:', e);
     } finally {
       sessionStorage.removeItem('eko_token');
-      localStorage.removeItem('eko_userName');
+      localStorage.removeItem('eko_empId');
       setUser(null);
       setModals(prev => ({ ...prev, login: true }));
       setToastMessage('로그아웃 되었습니다.');
@@ -150,13 +154,13 @@ export default function Page() {
   const handleMissionComplete = async (mission, content = '인증 완료') => {
     if (!user) return;
     try {
-      await api.verifyMission(mission.id, user.userName, content);
+      await api.verifyMission(mission.id, user.empId, content);
       const today = new Date().toISOString().split('T')[0];
       const newTodayMissions = { ...todayMissions, [mission.id]: today };
       setTodayMissions(newTodayMissions);
       localStorage.setItem('eko_todayMissions', JSON.stringify(newTodayMissions));
       setToastMessage(`[${mission.title}] 미션 완료!\n${mission.points}P 및 탄소저감량 ${mission.carbon}kg 적립완료 🌱`);
-      loadUserProfile(user.userName);
+      loadUserProfile(user.empId);
     } catch (error) {
       setToastMessage(error.info?.message || '미션 인증에 실패했습니다.');
     }

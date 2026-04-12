@@ -33,7 +33,7 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
       // onboardUser(userName, empId, charType, password)
       // charType is set to 'type1' by default as per requirements
       await api.onboardUser(userName, empId, 'type1', password);
-      onRegisterSuccess(empId);
+      onRegisterSuccess(userName);
     } catch (err) {
       setError(err.info?.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
     } finally {

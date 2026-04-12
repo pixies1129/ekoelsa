@@ -24,7 +24,7 @@ export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister 
     try {
       const response = await api.login(empId, password);
       sessionStorage.setItem('eko_token', response.token);
-      onLoginSuccess(empId);
+      onLoginSuccess(response.empId, response.userName);
     } catch (err) {
       setError(err.info?.message || '로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {

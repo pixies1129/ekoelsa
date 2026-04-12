@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Gift } from 'lucide-react';
 
-export default function GrantModal({ isOpen, onClose, onConfirm }) {
-  const [name, setName] = useState('');
+export default function GrantModal({ isOpen, onClose, onSubmit }) {
+  const [empId, setEmpId] = useState('');
   const [points, setPoints] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      setName('');
+      setEmpId('');
       setPoints('');
     }
   }, [isOpen]);
@@ -18,15 +18,15 @@ export default function GrantModal({ isOpen, onClose, onConfirm }) {
 
   const handleSubmit = () => {
     const p = parseInt(points);
-    if (!name.trim()) {
-      alert('이름을 입력해주세요.');
+    if (!empId.trim()) {
+      alert('사번을 입력해주세요.');
       return;
     }
     if (isNaN(p) || p <= 0) {
       alert('올바른 포인트 숫자를 입력해주세요.');
       return;
     }
-    onConfirm(name.trim(), p);
+    onSubmit(empId.trim(), p);
   };
 
   return (
@@ -37,10 +37,10 @@ export default function GrantModal({ isOpen, onClose, onConfirm }) {
         </h2>
         <input 
           type="text" 
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={empId}
+          onChange={(e) => setEmpId(e.target.value)}
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-3 focus:outline-none focus:border-indigo-500" 
-          placeholder="받을 지사원 이름 (본인은 '나')" 
+          placeholder="받을 지사원 사번 (본인은 '나')" 
         />
         <input 
           type="number" 
