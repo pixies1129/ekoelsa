@@ -30,12 +30,18 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
     setError('');
 
     try {
-      // onboardUser(userName, empId, charType, password)
-      // charType is set to 'type1' by default as per requirements
+      // 정해진 순서대로 인자 전달: userName, empId, charType, password
       await api.onboardUser(userName, empId, 'type1', password);
+      
+      // 성공 시 필드 초기화
+      setUserName('');
+      setEmpId('');
+      setPassword('');
+      setConfirmPassword('');
+      
       onRegisterSuccess(userName);
     } catch (err) {
-      setError(err.info?.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
+      setError(err.info?.error || '회원가입 실패. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
@@ -49,28 +55,28 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
             <span className="text-4xl">🌱</span>
           </div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">회원가입</h1>
-          <p className="text-sm text-gray-500 font-medium mt-1">EKO-ELSA와 함께하는 탄소중립 실천</p>
+          <p className="text-sm text-gray-500 font-medium mt-1 text-center">EKO-ELSA 탄소중립 실천</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">사용자 이름</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">이름</label>
             <input 
               type="text"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               placeholder="성명을 입력하세요"
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3 text-gray-800 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">사번 (Employee ID)</label>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">사번</label>
             <input 
               type="text"
               value={empId}
               onChange={(e) => setEmpId(e.target.value)}
               placeholder="사번을 입력하세요"
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3 text-gray-800 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
             />
           </div>
           <div>
@@ -80,7 +86,7 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3 text-gray-800 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
             />
           </div>
           <div>
@@ -90,27 +96,22 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
+              className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3 text-gray-800 focus:outline-none focus:border-green-500 focus:bg-white transition-all font-medium"
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-500 text-xs font-bold p-3.5 rounded-xl flex items-center gap-2 animate-shake">
-              <span className="text-base">⚠️</span>
-              {error}
+            <div className="bg-red-50 text-red-500 text-xs font-bold p-3 rounded-xl flex items-center gap-2">
+              <span>⚠️</span> {error}
             </div>
           )}
 
           <button 
             type="submit"
             disabled={loading}
-            className={`w-full ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white font-black py-4 rounded-2xl shadow-lg shadow-green-200 transition-all active:scale-95 flex items-center justify-center gap-2 text-lg`}
+            className={`w-full ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white font-black py-4 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 text-lg`}
           >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-              '회원가입'
-            )}
+            {loading ? '처리 중...' : '회원가입'}
           </button>
         </form>
 
@@ -123,10 +124,6 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
             이미 계정이 있으신가요? <span className="underline decoration-2 underline-offset-4">로그인하기</span>
           </button>
         </div>
-
-        <p className="mt-8 text-center text-xs text-gray-400 font-medium border-t border-gray-100 pt-6">
-          본 애플리케이션은 한국승강기안전공단 인천서부지사<br/>임직원 전용 서비스입니다.
-        </p>
       </div>
     </div>
   );

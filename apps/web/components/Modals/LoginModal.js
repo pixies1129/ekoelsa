@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as api from '@/lib/api';
 
 export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister }) {
@@ -23,10 +23,16 @@ export default function LoginModal({ isOpen, onLoginSuccess, onSwitchToRegister 
 
     try {
       const response = await api.login(empId, password);
-      sessionStorage.setItem('eko_token', response.token);
-      onLoginSuccess(response.empId, response.userName);
+      // Backend returns { token, empId, userName }
+      if (response.token) {
+        sessionStorage.setItem('eko_token', response.token);
+        onLoginSuccess(response.empId, response.userName);
+      } else {
+        throw new Error('인증 토큰이 누락되었습니다.');
+      }
     } catch (err) {
-      setError(err.info?.message || '로그인에 실패했습니다. 다시 시도해주세요.');
+      console.error('Login Error:', err);
+      setError(err.info?.error || err.message || '로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
