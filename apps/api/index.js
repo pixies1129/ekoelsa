@@ -94,6 +94,11 @@ app.get('/api/users/me', verifyToken, async (req, res) => {
     user.points = parseInt(user.points);
     user.carbonSaved = parseFloat(user.carbonSaved);
     user.pledgeDone = user.pledgeDone === "true";
+
+    // Global carbon total
+    const totalCarbon = await redis.get('stats:totalCarbon');
+    user.totalCarbon = parseFloat(totalCarbon || 0);
+
     res.json(user);
   } else {
     res.status(404).json({ error: 'User not found' });
@@ -135,6 +140,9 @@ app.post('/api/missions/:id/verify', verifyToken, async (req, res) => {
   const newCarbon = parseFloat((parseFloat(currentCarbon) + mission.carbon).toFixed(3));
   await redis.hset(userKey, 'carbonSaved', newCarbon);
   await redis.zadd('rankings', newPoints, req.empId);
+
+  // Global carbon total increment
+  await redis.incrbyfloat('stats:totalCarbon', mission.carbon);
 
   // Success handling: set limits
   if (id === 'pledge') {
