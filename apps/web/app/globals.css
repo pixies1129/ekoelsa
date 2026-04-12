@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @layer base {
+  * {
+    touch-action: manipulation;
+  }
   body {
     -webkit-tap-highlight-color: transparent;
   }
@@ -12,6 +15,11 @@
     height: 100vh; /* 구형 브라우저 대비용 */
     height: 100dvh; /* 최신 모바일 브라우저 주소창 대응 */
   }
+  
+  .app-container main {
+    -webkit-overflow-scrolling: touch;
+  }
+  
   @media (min-width: 640px) {
     .app-container {
       height: 850px;

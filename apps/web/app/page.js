@@ -38,6 +38,7 @@ export default function Page() {
   });
 
   const [pendingTextMission, setPendingTextMission] = useState(null);
+  const [pendingCameraMission, setPendingCameraMission] = useState(null);
 
   useEffect(() => {
     setMounted(true);
@@ -135,6 +136,14 @@ export default function Page() {
     setToastMessage(`${userName}님, 회원가입 완료! 이제 로그인해주세요.`);
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0 && pendingCameraMission) {
+      handleMissionComplete(pendingCameraMission, '사진 인증 완료');
+      setPendingCameraMission(null);
+      e.target.value = '';
+    }
+  };
+
   const handleMissionComplete = async (mission, content = '인증 완료') => {
     if (!user) return;
     try {
@@ -200,7 +209,10 @@ export default function Page() {
                     todayMissions={todayMissions}
                     pledgeDone={user?.pledgeDone}
                     onOpenPledgeModal={() => setModals(prev => ({ ...prev, pledge: true }))}
-                    onTriggerCamera={(id, title, points, carbon) => handleMissionComplete({ id, title, points, carbon })}
+                    onTriggerCamera={(id, title, points, carbon) => {
+                      setPendingCameraMission({ id, title, points, carbon });
+                      document.getElementById('camera-input')?.click();
+                    }}
                     onHandleTextMission={(id, title, points, carbon) => {
                       setPendingTextMission({ id, title, points, carbon });
                       setModals(prev => ({ ...prev, textInput: true }));
@@ -285,8 +297,8 @@ export default function Page() {
         id="camera-input" 
         accept="image/*" 
         capture="environment" 
-        className="absolute w-0 h-0 opacity-0 pointer-events-none" 
-        tabIndex="-1" 
+        className="hidden" 
+        onChange={handleFileChange} 
       />
     </div>
   );
