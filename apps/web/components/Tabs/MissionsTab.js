@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { 
   ListTodo, 
   ShieldCheck, 
@@ -28,14 +29,45 @@ export default function MissionsTab({
   onHandleTextMission, 
   onQrClick 
 }) {
-  const isMissionDone = (id) => todayMissions[id] === new Date().toISOString().split('T')[0];
+  const [shuffledMissions, setShuffledMissions] = useState([]);
+
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  useEffect(() => {
+    if (missions && missions.length > 0) {
+      const allMissions = [
+        { 
+          id: 'pledge', 
+          title: '모두의 에너지지킴이 서약', 
+          points: 50, 
+          carbon: 1.0, 
+          type: 'pledge' 
+        },
+        ...missions
+      ];
+      setShuffledMissions(shuffleArray(allMissions));
+    }
+  }, [missions]);
+
+  const isMissionDone = (id) => {
+    if (id === 'pledge') return pledgeDone;
+    return todayMissions[id] === new Date().toISOString().split('T')[0];
+  };
 
   const getActionBtn = (id, title, points, carbon, type, btnClass, textClass, customText) => {
     const isDone = isMissionDone(id);
     if (isDone) {
+      const doneText = id === 'pledge' ? '서약 완료 ✅' : '오늘 참여 완료';
       return (
         <button disabled className="w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold flex justify-center items-center">
-          <CheckCircle className="mr-2 w-3.5 h-3.5" /> 오늘 참여 완료
+          <CheckCircle className="mr-2 w-3.5 h-3.5" /> {doneText}
         </button>
       );
     }
@@ -51,7 +83,11 @@ export default function MissionsTab({
     } else if (type === 'qr') {
       onClickFn = onQrClick;
       Icon = QrCode;
-      btnText = customText || 'QR 스캔 방법';
+      btnText = customText || 'QR 스캔 방법안내';
+    } else if (type === 'pledge') {
+      onClickFn = onOpenPledgeModal;
+      Icon = CheckSquare;
+      btnText = '서약하기';
     } else {
       onClickFn = () => onTriggerCamera(id, title, points, carbon);
     }
@@ -64,6 +100,7 @@ export default function MissionsTab({
   };
 
   const missionIcons = {
+    pledge: ShieldCheck,
     m8: Battery,
     m4: FileText,
     m1: Footprints,
@@ -76,6 +113,7 @@ export default function MissionsTab({
   };
 
   const missionColors = {
+    pledge: { bg: 'bg-rose-50', text: 'text-rose-600', icon: 'text-rose-500' },
     m8: { bg: 'bg-yellow-50', text: 'text-yellow-700', icon: 'text-yellow-500' },
     m4: { bg: 'bg-purple-50', text: 'text-purple-600', icon: 'text-purple-500' },
     m1: { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'text-blue-500' },
@@ -93,33 +131,7 @@ export default function MissionsTab({
         <ListTodo className="mr-2 text-green-600 w-5 h-5" />진행중인 미션
       </h2>
       
-      {/* Static Mission: Pledge */}
-      <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
-        <div className="flex justify-between mb-2">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-rose-50 rounded-full flex items-center justify-center mr-3">
-              <ShieldCheck className="text-rose-500 w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-800 text-[13px]">
-                모두의 에너지지킴이 서약 <span className="font-normal text-gray-400 text-[9px]">(1회성)</span>
-              </h3>
-            </div>
-          </div>
-          <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+50P</div>
-        </div>
-        {pledgeDone ? (
-          <button disabled className="w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold flex justify-center items-center">
-            <CheckCircle className="mr-2 w-3.5 h-3.5" /> 서약 완료 ✅
-          </button>
-        ) : (
-          <button onClick={onOpenPledgeModal} className="w-full bg-rose-50 text-rose-600 py-2 rounded-xl text-xs font-bold flex justify-center items-center hover:bg-rose-100 transition-colors cursor-pointer">
-            <CheckSquare className="mr-1.5 w-3.5 h-3.5" /> 서약하기
-          </button>
-        )}
-      </div>
-
-      {missions.map((m) => {
+      {shuffledMissions.map((m) => {
         const Icon = missionIcons[m.id] || ListTodo;
         const colors = missionColors[m.id] || { bg: 'bg-gray-50', text: 'text-gray-600', icon: 'text-gray-400' };
         
@@ -131,8 +143,10 @@ export default function MissionsTab({
                   <Icon className={`${colors.icon} w-4 h-4`} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800 text-[13px]">{m.title}</h3>
-                  <p className="text-[9px] text-gray-500 mt-0.5">저감량: {m.carbon}kg</p>
+                  <h3 className="font-bold text-gray-800 text-[13px]">
+                    {m.title} {m.id === 'pledge' && <span className="font-normal text-gray-400 text-[9px]">(1회성)</span>}
+                  </h3>
+                  {m.id !== 'pledge' && <p className="text-[9px] text-gray-500 mt-0.5">저감량: {m.carbon}kg</p>}
                 </div>
               </div>
               <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+{m.points}P</div>
@@ -146,7 +160,7 @@ export default function MissionsTab({
               m.type,
               colors.bg,
               colors.text,
-              m.type === 'qr' ? 'QR 스캔 방법안내' : (m.type === 'text' ? '내용 입력 인증' : '사진 인증')
+              m.id === 'pledge' ? '서약하기' : (m.type === 'qr' ? 'QR 스캔 방법안내' : (m.type === 'text' ? '내용 입력 인증' : '사진 인증'))
             )}
           </div>
         );
