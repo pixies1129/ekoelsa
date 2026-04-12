@@ -80,15 +80,20 @@ export default function Page() {
     const urlParams = new URLSearchParams(window.location.search);
     const missionParam = urlParams.get('mission');
     
-    if (missionParam === 'm8' && user) {
+    if (missionParam === 'm8' && user && missions.length > 0) {
+      // URL 파라미터 즉시 제거하여 새로고침 시 중복 실행 방지
       window.history.replaceState({}, document.title, window.location.pathname);
+      
       const today = new Date().toISOString().split('T')[0];
       if (todayMissions['m8'] === today) {
         setToastMessage('오늘 이미 폐배터리 수거 인증을 완료했습니다.');
         return;
       }
-      const mission = missions.find(m => m.id === 'm8') || { id: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1 };
-      handleMissionComplete(mission);
+      
+      const mission = missions.find(m => m.id === 'm8');
+      if (mission) {
+        handleMissionComplete(mission);
+      }
     }
   }, [user, missions, todayMissions]);
 
