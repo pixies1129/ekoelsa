@@ -42,17 +42,20 @@ export default function MissionsTab({
 
   useEffect(() => {
     if (missions && missions.length > 0) {
-      const allMissions = [
-        { 
-          id: 'pledge', 
-          title: '모두의 에너지지킴이 서약', 
-          points: 50, 
-          carbon: 1.0, 
-          type: 'pledge' 
-        },
-        ...missions
-      ];
-      setShuffledMissions(shuffleArray(allMissions));
+      // 1. pledge와 m8 미션 추출 (고정 상단 배치용)
+      const pledge = missions.find(m => m.id === 'pledge');
+      const m8 = missions.find(m => m.id === 'm8');
+      
+      // 2. 나머지 미션들 필터링
+      const others = missions.filter(m => m.id !== 'pledge' && m.id !== 'm8');
+      
+      // 3. 나머지 미션 셔플 후 합치기 [pledge, m8, ...shuffledOthers]
+      const combined = [];
+      if (pledge) combined.push(pledge);
+      if (m8) combined.push(m8);
+      combined.push(...shuffleArray(others));
+      
+      setShuffledMissions(combined);
     }
   }, [missions]);
 
@@ -146,12 +149,11 @@ export default function MissionsTab({
                   <h3 className="font-bold text-gray-800 text-[13px]">
                     {m.title} {m.id === 'pledge' && <span className="font-normal text-gray-400 text-[9px]">(1회성)</span>}
                   </h3>
-                  {m.id !== 'pledge' && <p className="text-[9px] text-gray-500 mt-0.5">저감량: {m.carbon}kg</p>}
                 </div>
               </div>
               <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+{m.points}P</div>
             </div>
-            {m.id === 'm8' && <p className="text-[11px] text-gray-500 mb-3 px-1 truncate">장비실에 폐배터리 수거 후 QR코드를 스캔하세요.</p>}
+            {m.description && <p className="text-[11px] text-gray-500 mb-3 px-1">{m.description}</p>}
             {getActionBtn(
               m.id, 
               m.title, 
