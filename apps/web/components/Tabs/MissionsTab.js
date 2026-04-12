@@ -12,12 +12,17 @@ import {
   Coffee, 
   QrCode, 
   Camera, 
-  MessageSquare 
+  MessageSquare,
+  Mail,
+  Car,
+  Thermometer,
+  CupSoda
 } from 'lucide-react';
 
 export default function MissionsTab({ 
   missions, 
   todayMissions, 
+  pledgeDone,
   onOpenPledgeModal, 
   onTriggerCamera, 
   onHandleTextMission, 
@@ -63,7 +68,11 @@ export default function MissionsTab({
     m4: FileText,
     m1: Footprints,
     m7: Plug,
-    m3: Coffee
+    m3: Coffee,
+    m10: Mail,
+    m11: Car,
+    m12: Thermometer,
+    m13: CupSoda
   };
 
   const missionColors = {
@@ -71,7 +80,11 @@ export default function MissionsTab({
     m4: { bg: 'bg-purple-50', text: 'text-purple-600', icon: 'text-purple-500' },
     m1: { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'text-blue-500' },
     m7: { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' },
-    m3: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' }
+    m3: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' },
+    m10: { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'text-emerald-500' },
+    m11: { bg: 'bg-sky-50', text: 'text-sky-600', icon: 'text-sky-500' },
+    m12: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' },
+    m13: { bg: 'bg-teal-50', text: 'text-teal-600', icon: 'text-teal-500' }
   };
 
   return (
@@ -95,9 +108,9 @@ export default function MissionsTab({
           </div>
           <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+50P</div>
         </div>
-        {isMissionDone('pledge') ? (
+        {pledgeDone ? (
           <button disabled className="w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold flex justify-center items-center">
-            <CheckCircle className="mr-2 w-3.5 h-3.5" /> 참여 완료
+            <CheckCircle className="mr-2 w-3.5 h-3.5" /> 서약 완료 ✅
           </button>
         ) : (
           <button onClick={onOpenPledgeModal} className="w-full bg-rose-50 text-rose-600 py-2 rounded-xl text-xs font-bold flex justify-center items-center hover:bg-rose-100 transition-colors cursor-pointer">
@@ -130,10 +143,10 @@ export default function MissionsTab({
               m.title, 
               m.points, 
               m.carbon, 
-              m.id === 'm8' ? 'qr' : (m.id === 'm4' ? 'text' : 'camera'),
+              m.type,
               colors.bg,
               colors.text,
-              m.id === 'm8' ? 'QR 스캔 방법안내' : (m.id === 'm4' ? '내용 입력 인증' : '사진 인증')
+              m.type === 'qr' ? 'QR 스캔 방법안내' : (m.type === 'text' ? '내용 입력 인증' : '사진 인증')
             )}
           </div>
         );

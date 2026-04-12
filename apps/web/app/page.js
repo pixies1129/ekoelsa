@@ -146,7 +146,11 @@ export default function Page() {
       setToastMessage(`[${mission.title}] 미션 완료!\n${mission.points}P 및 탄소저감량 ${mission.carbon}kg 적립완료 🌱`);
       loadUserProfile(user.empId);
     } catch (error) {
-      setToastMessage(error.info?.error || '미션 인증에 실패했습니다.');
+      if (error.status === 400 && error.info?.error?.includes('오늘 이미')) {
+        setToastMessage('오늘 이미 완료한 미션입니다.');
+      } else {
+        setToastMessage(error.info?.error || '미션 인증에 실패했습니다.');
+      }
     }
   };
 
@@ -194,6 +198,7 @@ export default function Page() {
                   <MissionsTab 
                     missions={missions}
                     todayMissions={todayMissions}
+                    pledgeDone={user?.pledgeDone}
                     onOpenPledgeModal={() => setModals(prev => ({ ...prev, pledge: true }))}
                     onTriggerCamera={(id, title, points, carbon) => handleMissionComplete({ id, title, points, carbon })}
                     onHandleTextMission={(id, title, points, carbon) => {
@@ -239,8 +244,9 @@ export default function Page() {
               />
               <PledgeModal 
                 isOpen={modals.pledge}
+                isDone={user?.pledgeDone}
                 onClose={() => setModals(prev => ({ ...prev, pledge: false }))}
-                onSubmit={handlePledge}
+                onConfirm={handlePledge}
               />
               <EduModal 
                 isOpen={modals.edu}
