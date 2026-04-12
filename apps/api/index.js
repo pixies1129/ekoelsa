@@ -38,7 +38,11 @@ const todayMissions = [
   { id: 'm3', title: '다회용컵 이용', points: 15, carbon: 0.05, type: 'photo' },
   { id: 'm4', title: '페이퍼리스', points: 30, carbon: 0.029, type: 'text' },
   { id: 'm7', title: '콘센트 미차단 신고', points: 20, carbon: 0.1, type: 'photo' },
-  { id: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1, type: 'qr' }
+  { id: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1, type: 'qr' },
+  { id: 'm10', title: '메일함 비우기', points: 15, carbon: 0.001, type: 'text' },
+  { id: 'm11', title: '에코 드라이빙', points: 15, carbon: 0.1, type: 'text' },
+  { id: 'm12', title: '실내 적정온도 유지', points: 20, carbon: 0.05, type: 'photo' },
+  { id: 'm13', title: '개인컵/텀블러 사용', points: 15, carbon: 0.01, type: 'photo' }
 ];
 
 // 1. 회원가입
@@ -91,6 +95,7 @@ app.get('/api/users/me', verifyToken, async (req, res) => {
   if (Object.keys(user).length > 0) {
     user.points = parseInt(user.points);
     user.carbonSaved = parseFloat(user.carbonSaved);
+    user.pledgeDone = user.pledgeDone === "true";
     res.json(user);
   } else {
     res.status(404).json({ error: 'User not found' });
@@ -103,15 +108,44 @@ app.get('/api/missions', (req, res) => res.json(todayMissions));
 // 6. 미션 인증
 app.post('/api/missions/:id/verify', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const mission = todayMissions.find(m => m.id === id);
-  if (!mission) return res.status(400).json({ error: 'Mission not found' });
-
+  let mission;
   const userKey = `user:${req.empId}`;
+
+  // Handle 'pledge' mission specially
+  if (id === 'pledge') {
+    mission = { id: 'pledge', title: '에너지지킴이 서약', points: 50, carbon: 1.0 };
+    const user = await redis.hgetall(userKey);
+    if (user.pledgeDone === "true") {
+      return res.status(400).json({ error: '이미 서약을 완료하셨습니다.' });
+    }
+  } else {
+    mission = todayMissions.find(m => m.id === id);
+    if (!mission) return res.status(400).json({ error: 'Mission not found' });
+
+    // Daily limit check (except m8)
+    if (id !== 'm8') {
+      const today = new Date().toISOString().split('T')[0];
+      const limitKey = `mission:limit:${req.empId}:${id}:${today}`;
+      if (await redis.exists(limitKey)) {
+        return res.status(400).json({ error: '오늘 이미 이 미션을 완료하셨습니다.' });
+      }
+    }
+  }
+
   const newPoints = await redis.hincrby(userKey, 'points', mission.points);
   const currentCarbon = await redis.hget(userKey, 'carbonSaved') || 0;
   const newCarbon = parseFloat((parseFloat(currentCarbon) + mission.carbon).toFixed(3));
   await redis.hset(userKey, 'carbonSaved', newCarbon);
   await redis.zadd('rankings', newPoints, req.empId);
+
+  // Success handling: set limits
+  if (id === 'pledge') {
+    await redis.hset(userKey, 'pledgeDone', 'true');
+  } else if (id !== 'm8') {
+    const today = new Date().toISOString().split('T')[0];
+    const limitKey = `mission:limit:${req.empId}:${id}:${today}`;
+    await redis.set(limitKey, '1', 'EX', 86400); // 24 hours
+  }
 
   res.json({ empId: req.empId, points: newPoints, carbonSaved: newCarbon });
 });
