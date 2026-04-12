@@ -19,7 +19,6 @@ export default function RankingTab({ rankings, onOpenGrantModal }) {
         <div className="pr-2">
           <h2 className="font-extrabold text-green-800 text-base mb-1">실제 나무 심기 효과</h2>
           <p className="text-[10px] text-green-600">국립산림과학원 기준</p>
-          <p className="text-xs text-gray-600 mt-1">지사 총 탄소저감: {safeTotal.toFixed(1)}kg</p>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-3xl mb-1">🌲</span>

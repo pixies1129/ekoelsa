@@ -13,14 +13,13 @@ export default function Header({ onLogout }) {
           </h1>
           <p className="text-xs text-gray-500 mt-1.5 ml-1">인천서부지사</p>
         </div>
-        <div className="flex items-center gap-3 mt-1.5">
-          <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" className="h-8 object-contain" referrerPolicy="no-referrer" />
+        <div className="flex flex-col items-end gap-1.5 mt-1.5">
+          <img src="https://i.ibb.co/TdGttdp/ci.png" alt="한국승강기안전공단 로고" className="h-7 object-contain" referrerPolicy="no-referrer" />
           <button 
             onClick={onLogout}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-red-500"
-            title="로그아웃"
+            className="text-[9px] font-bold text-gray-400 hover:text-red-500 transition-all cursor-pointer px-1"
           >
-            <LogOut size={20} />
+            로그아웃
           </button>
         </div>
       </div>
