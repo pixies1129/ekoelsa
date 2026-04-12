@@ -68,15 +68,22 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal 
       </div>
 
       <div className="w-full grid grid-cols-2 gap-4">
-        <div onClick={onOpenEduModal} className="cursor-pointer bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-300 flex flex-col items-center justify-center hover:bg-emerald-100 transition-colors">
-          <BookOpenCheck className="text-emerald-600 mb-2 w-7 h-7" />
-          <span className="text-[11px] text-emerald-700 font-medium">지구를 위한</span>
-          <span className="text-[15px] font-bold text-emerald-900">탄소중립 실천</span>
+        <div onClick={onOpenEduModal} className="col-span-2 cursor-pointer bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-300 flex items-center justify-center hover:bg-emerald-100 transition-colors">
+          <BookOpenCheck className="text-emerald-600 mr-3 w-7 h-7" />
+          <div className="flex flex-col">
+            <span className="text-[11px] text-emerald-700 font-medium">지구를 위한</span>
+            <span className="text-[15px] font-bold text-emerald-900">탄소중립 실천 교육</span>
+          </div>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center text-center">
           <Leaf className="text-green-500 mb-2 w-7 h-7" />
           <span className="text-[11px] text-gray-500 font-medium">나의 누적 탄소저감</span>
-          <span className="text-[15px] font-bold text-gray-800">{profile.carbonSaved} kg</span>
+          <span className="text-[15px] font-bold text-gray-800">{(profile.carbonSaved || 0).toFixed(2)} kg</span>
+        </div>
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-green-100 flex flex-col items-center justify-center text-center">
+          <Leaf className="text-green-600 mb-2 w-7 h-7" />
+          <span className="text-[11px] text-gray-500 font-medium">지사 총 탄소저감</span>
+          <span className="text-[15px] font-bold text-gray-800">{(profile.totalCarbon || 0).toFixed(2)} kg</span>
         </div>
       </div>
     </div>

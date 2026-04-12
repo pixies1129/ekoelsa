@@ -158,6 +158,7 @@ export default function Page() {
       setTodayMissions(newTodayMissions);
       localStorage.setItem('eko_todayMissions', JSON.stringify(newTodayMissions));
       setToastMessage(`[${mission.title}] 미션 완료!\n${mission.points}P 및 탄소저감량 ${mission.carbon}kg 적립완료 🌱`);
+      // Reload profile to refresh personal (carbonSaved) and global (totalCarbon) stats
       loadUserProfile(user.empId);
     } catch (error) {
       if (error.status === 400 && error.info?.error?.includes('오늘 이미')) {
