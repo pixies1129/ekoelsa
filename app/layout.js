@@ -17,6 +17,11 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko" suppressHydrationWarning>
+      <head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </head>
       <body className="bg-gray-100 flex justify-center items-center min-h-screen font-sans text-gray-800" suppressHydrationWarning>
         {children}
         <script
