@@ -63,3 +63,4 @@ npx vercel --prod  # Vercel 배포
 - Next.js 16은 최신 버전으로, 코드 작성 전 `node_modules/next/dist/docs/`의 가이드를 확인하세요 (AGENTS.md 참조)
 - 아이콘은 Lucide React를 사용합니다
 - **플랜 생성 지침**: `superpowers` (TDD, plan-writing 등)를 이용한 상세 플랜 생성은 복잡한 기능 구현이나 대규모 리팩토링 시에만 사용자 확인을 거친 후 수행합니다. 단순한 버그 수정, 간단한 UI 변경 등은 플랜 생성 없이 즉시 진행합니다.
+- **커밋 메시지**: 커밋 메시지는 한국어로 작성하며, 간결하고 명확하게 작성합니다. "무엇을(What)"보다는 "왜(Why)"에 집중합니다.
