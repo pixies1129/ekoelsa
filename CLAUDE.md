@@ -62,3 +62,4 @@ npx vercel --prod  # Vercel 배포
 - UI 및 코드 주석은 한국어를 기본으로 사용합니다
 - Next.js 16은 최신 버전으로, 코드 작성 전 `node_modules/next/dist/docs/`의 가이드를 확인하세요 (AGENTS.md 참조)
 - 아이콘은 Lucide React를 사용합니다
+- **플랜 생성 지침**: `superpowers` (TDD, plan-writing 등)를 이용한 상세 플랜 생성은 복잡한 기능 구현이나 대규모 리팩토링 시에만 사용자 확인을 거친 후 수행합니다. 단순한 버그 수정, 간단한 UI 변경 등은 플랜 생성 없이 즉시 진행합니다.
