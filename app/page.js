@@ -63,7 +63,7 @@ export default function Page() {
     if (!token || !savedEmpId) {
       setModals(prev => ({ ...prev, login: true }));
     } else {
-      loadUserProfile(savedEmpId);
+      loadUserProfile();
     }
 
     const savedTodayMissions = localStorage.getItem('eko_todayMissions');
@@ -97,9 +97,9 @@ export default function Page() {
     }
   }, [user, missions, todayMissions]);
 
-  const loadUserProfile = async (empId) => {
+  const loadUserProfile = async () => {
     try {
-      const profile = await api.getUserProfile(empId);
+      const profile = await api.getUserProfile();
       setUser(profile);
       refreshRankings();
     } catch (error) {
@@ -120,7 +120,7 @@ export default function Page() {
   const handleLoginSuccess = (empId, userName) => {
     localStorage.setItem('eko_empId', empId);
     setModals(prev => ({ ...prev, login: false }));
-    loadUserProfile(empId);
+    loadUserProfile();
     setToastMessage(`${userName || empId}님, 환영합니다!`);
   };
 
@@ -152,14 +152,14 @@ export default function Page() {
   const handleMissionComplete = async (mission, content = '인증 완료') => {
     if (!user) return;
     try {
-      await api.verifyMission(mission.id, user.empId, content);
+      await api.verifyMission(mission.id, content);
       const today = new Date().toISOString().split('T')[0];
       const newTodayMissions = { ...todayMissions, [mission.id]: today };
       setTodayMissions(newTodayMissions);
       localStorage.setItem('eko_todayMissions', JSON.stringify(newTodayMissions));
       setToastMessage(`[${mission.title}] 미션 완료!\n${mission.points}P 및 탄소저감량 ${mission.carbon}kg 적립완료 🌱`);
       // Reload profile to refresh personal (carbonSaved) and global (totalCarbon) stats
-      loadUserProfile(user.empId);
+      loadUserProfile();
     } catch (error) {
       if (error.status === 400 && error.info?.error?.includes('오늘 이미')) {
         setToastMessage('오늘 이미 완료한 미션입니다.');
@@ -181,7 +181,7 @@ export default function Page() {
       await api.giftPoints(targetEmpId, points);
       setToastMessage(`${targetEmpId}님에게 ${points}P가 지급되었습니다!`);
       setModals(prev => ({ ...prev, grant: false }));
-      loadUserProfile(user.empId);
+      loadUserProfile();
     } catch (error) {
       setToastMessage(error.info?.error || '포인트 지급에 실패했습니다.');
     }

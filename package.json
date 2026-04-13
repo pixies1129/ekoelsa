@@ -1,9 +1,22 @@
 {
-  "name": "eko-elsa-monorepo",
+  "name": "eko-elsa",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter \"./apps/**\" dev",
-    "build": "pnpm --filter \"./apps/**\" build",
-    "start": "pnpm --filter \"./apps/**\" start"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "ioredis": "^5.3.2",
+    "lucide-react": "^1.8.0",
+    "next": "16.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4"
   }
 }
