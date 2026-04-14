@@ -169,24 +169,32 @@ export default function Page() {
     setToastMessage(`${userName}님, 회원가입 완료! 이제 로그인해주세요.`);
   };
 
+  const [isVerifying, setIsVerifying] = useState(false);
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0 && pendingCameraMission) {
-      handleMissionComplete(pendingCameraMission, '사진 인증 완료');
-      setPendingCameraMission(null);
-      e.target.value = '';
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        handleMissionComplete(pendingCameraMission, '사진 인증 완료', base64String);
+        setPendingCameraMission(null);
+        e.target.value = '';
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleMissionComplete = async (mission, content = '인증 완료') => {
+  const handleMissionComplete = async (mission, content = '인증 완료', image = null) => {
     if (!user) return;
+    setIsVerifying(true);
     try {
-      await api.verifyMission(mission.id, content);
+      await api.verifyMission(mission.id, content, mission.points, mission.carbon, image);
       const today = new Date().toISOString().split('T')[0];
       const newTodayMissions = { ...todayMissions, [mission.id]: today };
       setTodayMissions(newTodayMissions);
       localStorage.setItem('eko_todayMissions', JSON.stringify(newTodayMissions));
       setToastMessage(`[${mission.title}] 미션 완료!\n${mission.points}P 및 탄소저감량 ${mission.carbon}kg 적립완료 🌱`);
-      // Reload profile to refresh personal (carbonSaved) and global (totalCarbon) stats
       loadUserProfile();
     } catch (error) {
       if (error.status === 400 && error.info?.error?.includes('오늘 이미')) {
@@ -194,6 +202,8 @@ export default function Page() {
       } else {
         setToastMessage(error.info?.error || '미션 인증에 실패했습니다.');
       }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
