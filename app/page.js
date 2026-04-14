@@ -237,7 +237,7 @@ export default function Page() {
                       setPendingTextMission({ id, title, points, carbon });
                       setModals(prev => ({ ...prev, textInput: true }));
                     }}
-                    onQrClick={() => setToastMessage('스마트폰 기본 카메라 앱을 열고 장비실에 부착된 QR코드를 스캔해주세요!')}
+                    onQrClick={() => setToastMessage('폐배터리를 수거하셨다면 담당자에게 신고해 주세요.')}
                   />
                 )}
                 {activeTab === 'forest' && (

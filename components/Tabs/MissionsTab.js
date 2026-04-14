@@ -32,16 +32,7 @@ export default function MissionsTab({
   onHandleTextMission, 
   onQrClick 
 }) {
-  const [shuffledMissions, setShuffledMissions] = useState([]);
-
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
+  const [displayMissions, setDisplayMissions] = useState([]);
 
   useEffect(() => {
     if (missions && missions.length > 0) {
@@ -49,16 +40,16 @@ export default function MissionsTab({
       const pledge = missions.find(m => m.id === 'pledge');
       const m8 = missions.find(m => m.id === 'm8');
       
-      // 2. 나머지 미션들 필터링
+      // 2. 나머지 미션들 (원래 순서 유지)
       const others = missions.filter(m => m.id !== 'pledge' && m.id !== 'm8');
       
-      // 3. 나머지 미션 셔플 후 합치기 [pledge, m8, ...shuffledOthers]
+      // 3. 고정된 순서로 합치기 [pledge, m8, ...others]
       const combined = [];
       if (pledge) combined.push(pledge);
       if (m8) combined.push(m8);
-      combined.push(...shuffleArray(others));
+      combined.push(...others);
       
-      setShuffledMissions(combined);
+      setDisplayMissions(combined);
     }
   }, [missions]);
 
@@ -144,7 +135,7 @@ export default function MissionsTab({
         <ListTodo className="mr-2 text-green-600 w-6 h-6" />진행중인 미션
       </h2>
       
-      {shuffledMissions.map((m) => {
+      {displayMissions.map((m) => {
         const Icon = missionIcons[m.id] || ListTodo;
         const colors = missionColors[m.id] || { bg: 'bg-gray-50', text: 'text-gray-600', icon: 'text-gray-400' };
         
@@ -161,9 +152,16 @@ export default function MissionsTab({
                   </h3>
                 </div>
               </div>
-              <div className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded text-[13px] font-bold h-fit">+{m.points}P</div>
+              <div className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded text-[13px] font-bold h-fit">{m.id === 'm8' ? '최대 +' : '+'}{m.points}P</div>
             </div>
-            {m.description && <p className="text-[14px] text-gray-500 mb-4 px-1">{m.description}</p>}
+            {m.description && (
+              <p className="text-[14px] text-gray-500 mb-4 px-1">
+                {m.description}
+                {m.id !== 'pledge' && (
+                  <span className="text-green-600 font-medium ml-1.5 whitespace-nowrap">(저감량 : {m.carbon}kg)</span>
+                )}
+              </p>
+            )}
             {getActionBtn(
               m.id, 
               m.title, 
@@ -172,7 +170,7 @@ export default function MissionsTab({
               m.type,
               colors.bg,
               colors.text,
-              m.id === 'pledge' ? '서약하기' : (m.type === 'qr' ? 'QR 스캔 방법안내' : (m.type === 'text' ? '내용 입력 인증' : '사진 인증'))
+              m.id === 'pledge' ? '서약하기' : (m.type === 'qr' ? '담당자 신고' : (m.type === 'text' ? '내용 입력 인증' : '사진 인증'))
             )}
           </div>
         );

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import redis from '@/lib/redis';
 import { verifyToken } from '@/lib/auth';
-import { todayMissions } from '../missions/route';
+import { todayMissions } from '@/lib/missions';
 
 export async function GET(request) {
   const empId = await verifyToken(request);

@@ -1,20 +1,7 @@
 import { NextResponse } from 'next/server';
 import redis from '@/lib/redis';
 import { verifyToken } from '@/lib/auth';
-
-const todayMissions = [
-  { id: 'pledge', title: '모두의 에너지지킴이 서약', points: 50, carbon: 1.0 },
-  { id: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1 },
-  { id: 'm1', title: '계단 이용', points: 20, carbon: 0.032 },
-  { id: 'm2', title: '대중교통 이용', points: 25, carbon: 1.0 },
-  { id: 'm3', title: '다회용컵 이용', points: 15, carbon: 0.05 },
-  { id: 'm4', title: '페이퍼리스', points: 30, carbon: 0.029 },
-  { id: 'm5', title: '줍깅/플로깅 참여', points: 30, carbon: 0.5 },
-  { id: 'm6', title: '자전거 이용', points: 25, carbon: 0.5 },
-  { id: 'm7', title: '콘센트 미차단 신고', points: 20, carbon: 0.1 },
-  { id: 'm10', title: '메일함 비우기', points: 15, carbon: 0.001 },
-  { id: 'm12', title: '실내 적정온도 유지', points: 20, carbon: 0.05 },
-];
+import { todayMissions } from '@/lib/missions';
 
 export async function POST(request, { params }) {
   try {
