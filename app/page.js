@@ -207,6 +207,12 @@ export default function Page() {
                     profile={user} 
                     onOpenCharacterModal={() => setModals(prev => ({ ...prev, character: true }))}
                     onOpenEduModal={() => setModals(prev => ({ ...prev, edu: true }))}
+                    missionStats={{
+                      completed: Object.entries(todayMissions).filter(([id, date]) => 
+                        id !== 'pledge' && date === new Date().toISOString().split('T')[0]
+                      ).length,
+                      total: missions.filter(m => m.id !== 'pledge').length
+                    }}
                   />
                 )}
                 {activeTab === 'missions' && (

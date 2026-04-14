@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    font-size: 115%; /* 전체 글씨 크기를 기본보다 크게 설정 */
+  }
   * {
     touch-action: manipulation;
   }

@@ -16,13 +16,20 @@ export default function RankingTab({ rankings, onOpenGrantModal }) {
   return (
     <div className="p-6 space-y-6 animate-in pb-12">
       <div className="bg-green-50 rounded-2xl p-5 shadow-sm border border-green-200 flex items-center justify-between">
-        <div className="pr-2">
-          <h2 className="font-extrabold text-green-800 text-base mb-1">실제 나무 심기 효과</h2>
-          <p className="text-[10px] text-green-600">국립산림과학원 기준</p>
+        <div className="pr-2 flex-1">
+          <h2 className="font-extrabold text-green-800 text-lg mb-1">실제 나무 심기 효과</h2>
+          <p className="text-[11px] text-green-600 leading-relaxed mb-3">
+            국립산림과학원 기준<br/>
+            (소나무 30년생 1그루의 연간 CO2 흡수량: 6.6kg)
+          </p>
+          <div className="bg-white/50 py-2 px-3 rounded-xl border border-green-100 inline-block">
+            <span className="text-[14px] font-bold text-gray-700">지사 총 탄소저감 </span>
+            <span className="text-[17px] font-black text-green-700 ml-1">{safeTotal.toFixed(2)} kg</span>
+          </div>
         </div>
-        <div className="flex flex-col items-center">
-          <span className="text-3xl mb-1">🌲</span>
-          <span className="font-extrabold text-sm text-green-700 bg-white px-2 py-1 rounded-full shadow-sm whitespace-nowrap">
+        <div className="flex flex-col items-center ml-2">
+          <span className="text-5xl mb-2">🌲</span>
+          <span className="font-extrabold text-sm text-green-700 bg-white px-3 py-1.5 rounded-full shadow-md whitespace-nowrap">
             약 {equivalentTrees} 그루
           </span>
         </div>

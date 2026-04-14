@@ -17,7 +17,10 @@ import {
   Mail,
   Car,
   Thermometer,
-  CupSoda
+  CupSoda,
+  Bus,
+  Recycle,
+  Bike
 } from 'lucide-react';
 
 export default function MissionsTab({ 
@@ -69,8 +72,8 @@ export default function MissionsTab({
     if (isDone) {
       const doneText = id === 'pledge' ? '서약 완료 ✅' : '오늘 참여 완료';
       return (
-        <button disabled className="w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold flex justify-center items-center">
-          <CheckCircle className="mr-2 w-3.5 h-3.5" /> {doneText}
+        <button disabled className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center">
+          <CheckCircle className="mr-2 w-4 h-4" /> {doneText}
         </button>
       );
     }
@@ -96,8 +99,8 @@ export default function MissionsTab({
     }
     
     return (
-      <button onClick={onClickFn} className={`w-full ${btnClass} ${textClass} py-2 rounded-xl text-xs font-bold flex justify-center items-center transition-colors cursor-pointer`}>
-        <Icon className="mr-1.5 w-3.5 h-3.5" /> {btnText}
+      <button onClick={onClickFn} className={`w-full ${btnClass} ${textClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center transition-colors cursor-pointer`}>
+        <Icon className="mr-1.5 w-4 h-4" /> {btnText}
       </button>
     );
   };
@@ -107,6 +110,9 @@ export default function MissionsTab({
     m8: Battery,
     m4: FileText,
     m1: Footprints,
+    m2: Bus,
+    m5: Recycle,
+    m6: Bike,
     m7: Plug,
     m3: Coffee,
     m10: Mail,
@@ -120,6 +126,9 @@ export default function MissionsTab({
     m8: { bg: 'bg-yellow-50', text: 'text-yellow-700', icon: 'text-yellow-500' },
     m4: { bg: 'bg-purple-50', text: 'text-purple-600', icon: 'text-purple-500' },
     m1: { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'text-blue-500' },
+    m2: { bg: 'bg-indigo-50', text: 'text-indigo-600', icon: 'text-indigo-500' },
+    m5: { bg: 'bg-teal-50', text: 'text-teal-600', icon: 'text-teal-500' },
+    m6: { bg: 'bg-cyan-50', text: 'text-cyan-600', icon: 'text-cyan-500' },
     m7: { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' },
     m3: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' },
     m10: { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'text-emerald-500' },
@@ -129,9 +138,9 @@ export default function MissionsTab({
   };
 
   return (
-    <div className="p-5 space-y-3 animate-in pb-10">
-      <h2 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
-        <ListTodo className="mr-2 text-green-600 w-5 h-5" />진행중인 미션
+    <div className="p-5 space-y-4 animate-in pb-10">
+      <h2 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+        <ListTodo className="mr-2 text-green-600 w-6 h-6" />진행중인 미션
       </h2>
       
       {shuffledMissions.map((m) => {
@@ -139,21 +148,21 @@ export default function MissionsTab({
         const colors = missionColors[m.id] || { bg: 'bg-gray-50', text: 'text-gray-600', icon: 'text-gray-400' };
         
         return (
-          <div key={m.id} className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-200">
+          <div key={m.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
             <div className="flex justify-between mb-2">
               <div className="flex items-center">
-                <div className={`w-8 h-8 ${colors.bg} rounded-full flex items-center justify-center mr-3`}>
-                  <Icon className={`${colors.icon} w-4 h-4`} />
+                <div className={`w-9 h-9 ${colors.bg} rounded-full flex items-center justify-center mr-3`}>
+                  <Icon className={`${colors.icon} w-5 h-5`} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800 text-[13px]">
-                    {m.title} {m.id === 'pledge' && <span className="font-normal text-gray-400 text-[9px]">(1회성)</span>}
+                  <h3 className="font-bold text-gray-800 text-[16px]">
+                    {m.title} {m.id === 'pledge' && <span className="font-normal text-gray-400 text-[11px]">(1회성)</span>}
                   </h3>
                 </div>
               </div>
-              <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold h-fit">+{m.points}P</div>
+              <div className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded text-[13px] font-bold h-fit">+{m.points}P</div>
             </div>
-            {m.description && <p className="text-[11px] text-gray-500 mb-3 px-1">{m.description}</p>}
+            {m.description && <p className="text-[14px] text-gray-500 mb-4 px-1">{m.description}</p>}
             {getActionBtn(
               m.id, 
               m.title, 
