@@ -78,7 +78,6 @@ export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpI
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{idx + 1}</div>
                 <div>
                   <div className="font-bold text-gray-800 text-sm">{user.userName}</div>
-                  {isAdmin && <div className="text-[9px] text-gray-400">사번: {user.empId}</div>}
                 </div>
               </div>
               
