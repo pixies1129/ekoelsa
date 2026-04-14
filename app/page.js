@@ -275,6 +275,8 @@ export default function Page() {
                 {activeTab === 'forest' && (
                   <RankingTab 
                     rankings={rankings}
+                    currentUserEmpId={user?.empId}
+                    onRefresh={refreshRankings}
                     onOpenGrantModal={() => setModals(prev => ({ ...prev, grant: true }))}
                     suppressHydrationWarning
                   />

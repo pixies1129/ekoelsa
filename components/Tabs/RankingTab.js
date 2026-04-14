@@ -1,16 +1,41 @@
 'use client';
 
-import { Trophy, Gift } from 'lucide-react';
+import { Trophy, Gift, RotateCcw, UserMinus } from 'lucide-react';
+import * as api from '@/lib/api';
 
-export default function RankingTab({ rankings, onOpenGrantModal }) {
+export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpId, onRefresh }) {
   const safeTotal = rankings.reduce((sum, user) => sum + (user.carbonSaved || 0), 0);
   const equivalentTrees = (safeTotal / 6.6).toFixed(1);
+
+  const isAdmin = currentUserEmpId === '20220055';
 
   const getLevelEmoji = (points) => {
     if (points < 1000) return '🌱';
     if (points < 2000) return '🌿';
     if (points < 3000) return '🪴';
     return '🌳';
+  };
+
+  const handleReset = async (user) => {
+    if (!confirm(`${user.userName}님의 포인트와 탄소저감량을 초기화하시겠습니까?`)) return;
+    try {
+      await api.adminResetUser(user.empId);
+      alert('초기화되었습니다.');
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      alert('초기화 실패: ' + (e.info?.error || e.message));
+    }
+  };
+
+  const handleDelete = async (user) => {
+    if (!confirm(`${user.userName}님을 강제 탈퇴시키겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+    try {
+      await api.adminDeleteUser(user.empId);
+      alert('삭제되었습니다.');
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      alert('삭제 실패: ' + (e.info?.error || e.message));
+    }
   };
 
   return (
@@ -40,22 +65,46 @@ export default function RankingTab({ rankings, onOpenGrantModal }) {
           <h3 className="text-lg font-bold text-gray-800 flex items-center">
             <Trophy className="mr-2 text-yellow-500 w-5 h-5" />지사원 랭킹
           </h3>
-          <button onClick={onOpenGrantModal} className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-100 font-bold hover:bg-indigo-100 transition-colors flex items-center cursor-pointer">
-            <Gift className="w-3 h-3 mr-1" />포인트 지급/선물
-          </button>
+          {isAdmin && (
+            <button onClick={onOpenGrantModal} className="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-100 font-bold hover:bg-indigo-100 transition-colors flex items-center cursor-pointer">
+              <Gift className="w-3 h-3 mr-1" />포인트 지급/선물
+            </button>
+          )}
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {rankings.map((user, idx) => (
-            <div key={user.userName} className={`flex items-center justify-between p-4 ${idx === 0 ? 'bg-green-50 border-b border-gray-100' : 'border-b border-gray-50 last:border-0'}`}>
+            <div key={user.empId || user.userName} className={`flex items-center justify-between p-4 ${idx === 0 ? 'bg-green-50 border-b border-gray-100' : 'border-b border-gray-50 last:border-0'}`}>
               <div className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{idx + 1}</div>
                 <div>
                   <div className="font-bold text-gray-800 text-sm">{user.userName}</div>
+                  {isAdmin && <div className="text-[9px] text-gray-400">사번: {user.empId}</div>}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-green-600">{user.points}P</div>
-                <div className="text-lg">{getLevelEmoji(user.points)}</div>
+              
+              <div className="flex items-center space-x-4">
+                {isAdmin && user.empId !== currentUserEmpId && (
+                  <div className="flex space-x-1">
+                    <button 
+                      onClick={() => handleReset(user)}
+                      className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-md transition-colors"
+                      title="초기화"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(user)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                      title="강제탈퇴"
+                    >
+                      <UserMinus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                <div className="text-right">
+                  <div className="font-bold text-green-600 text-sm">{user.points}P</div>
+                  <div className="text-lg leading-none">{getLevelEmoji(user.points)}</div>
+                </div>
               </div>
             </div>
           ))}
