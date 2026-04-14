@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-const todayMissions = [
-  { id: 'pledge', title: '에너지지킴이 서약', points: 50, carbon: 1.0, type: 'pledge', description: '지구를 위한 소중한 약속에 동참해주세요.' },
+export const todayMissions = [
+  { id: 'pledge', title: '모두의 에너지지킴이 서약', points: 50, carbon: 1.0, type: 'pledge', description: '지구를 위한 소중한 약속에 동참해주세요.' },
   { id: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1, type: 'qr', description: '장비실에 부착된 QR코드를 찍어주세요.' },
   { id: 'm1', title: '계단 이용', points: 20, carbon: 0.032, type: 'photo', description: '계단에 보이는 층을 찍어주세요.' },
   { id: 'm2', title: '대중교통 이용', points: 25, carbon: 1.0, type: 'photo', description: '대중교통 이용 모습을 찍어주세요.' },

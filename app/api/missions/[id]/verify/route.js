@@ -3,7 +3,7 @@ import redis from '@/lib/redis';
 import { verifyToken } from '@/lib/auth';
 
 const todayMissions = [
-  { id: 'pledge', title: '에너지지킴이 서약', points: 50, carbon: 1.0 },
+  { id: 'pledge', title: '모두의 에너지지킴이 서약', points: 50, carbon: 1.0 },
   { id: 'm8', title: '폐배터리 수거', points: 50, carbon: 0.1 },
   { id: 'm1', title: '계단 이용', points: 20, carbon: 0.032 },
   { id: 'm2', title: '대중교통 이용', points: 25, carbon: 1.0 },
@@ -36,7 +36,7 @@ export async function POST(request, { params }) {
     let mission;
 
     if (id === 'pledge') {
-      mission = { id: 'pledge', title: '에너지지킴이 서약', points: 50, carbon: 1.0 };
+      mission = { id: 'pledge', title: '모두의 에너지지킴이 서약', points: 50, carbon: 1.0 };
       const user = await redis.hgetall(userKey);
       if (user.pledgeDone === 'true') {
         return NextResponse.json({ error: '이미 서약을 완료하셨습니다.' }, { status: 400 });
@@ -48,12 +48,10 @@ export async function POST(request, { params }) {
         return NextResponse.json({ error: '존재하지 않는 미션입니다.' }, { status: 400 });
       }
 
-      if (id !== 'm8') {
-        const today = new Date().toISOString().split('T')[0];
-        const limitKey = `mission:limit:${empId}:${id}:${today}`;
-        if (await redis.exists(limitKey)) {
-          return NextResponse.json({ error: '오늘 이미 이 미션을 완료하셨습니다.' }, { status: 400 });
-        }
+      const today = new Date().toISOString().split('T')[0];
+      const limitKey = `mission:limit:${empId}:${id}:${today}`;
+      if (await redis.exists(limitKey)) {
+        return NextResponse.json({ error: '오늘 이미 이 미션을 완료하셨습니다.' }, { status: 400 });
       }
     }
 
@@ -70,11 +68,16 @@ export async function POST(request, { params }) {
     await redis.zadd('rankings', newPoints, empId);
     await redis.incrbyfloat('stats:totalCarbon', finalCarbon);
 
+    // 주간 그래프를 위한 일별 탄소저감량 기록
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dailyCarbonKey = `carbon:${empId}:${todayStr}`;
+    const currentDailyCarbon = parseFloat(await redis.get(dailyCarbonKey) || '0');
+    await redis.set(dailyCarbonKey, (currentDailyCarbon + finalCarbon).toFixed(3));
+
     if (id === 'pledge') {
       await redis.hset(userKey, 'pledgeDone', 'true');
-    } else if (id !== 'm8') {
-      const today = new Date().toISOString().split('T')[0];
-      const limitKey = `mission:limit:${empId}:${id}:${today}`;
+    } else {
+      const limitKey = `mission:limit:${empId}:${id}:${todayStr}`;
       await redis.set(limitKey, '1', 'EX', 86400);
     }
 

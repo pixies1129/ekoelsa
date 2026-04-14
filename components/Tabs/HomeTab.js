@@ -41,15 +41,13 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
   if (levelInfo.level === 3) charAnimation = 'animate-float'; 
   if (levelInfo.level === 4) charAnimation = 'animate-bounce-slow scale-110';
 
-  const weeklyData = [
-    { day: '월', value: 0.4 },
-    { day: '화', value: 0.8 },
-    { day: '수', value: 0.5 },
-    { day: '목', value: 1.2 },
-    { day: '금', value: 0.9 },
-    { day: '토', value: 0.3 },
-    { day: '일', value: profile.carbonSaved % 1.5 }
+  // 백엔드에서 받은 실제 주간 데이터 사용 (없을 경우를 대비한 기본값)
+  const weeklyData = profile.weeklyData || [
+    { day: '월', value: 0 }, { day: '화', value: 0 }, { day: '수', value: 0 },
+    { day: '목', value: 0 }, { day: '금', value: 0 }, { day: '토', value: 0 }, { day: '일', value: 0 }
   ];
+  
+  // 최대값이 0이면 그래프가 깨질 수 있으므로 최소 기준값 1.5로 설정
   const maxVal = Math.max(...weeklyData.map(d => d.value), 1.5);
 
   return (

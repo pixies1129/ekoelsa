@@ -14,6 +14,7 @@ export async function GET() {
       userName: user.userName || 'Unknown',
       points: parseInt(raw[i + 1]),
       charType: user.charType || 'type1',
+      carbonSaved: parseFloat(user.carbonSaved || 0),
     });
   }
 

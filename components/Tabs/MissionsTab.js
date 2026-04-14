@@ -69,14 +69,6 @@ export default function MissionsTab({
 
   const getActionBtn = (id, title, points, carbon, type, btnClass, textClass, customText) => {
     const isDone = isMissionDone(id);
-    if (isDone) {
-      const doneText = id === 'pledge' ? '서약 완료 ✅' : '오늘 참여 완료';
-      return (
-        <button disabled className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center">
-          <CheckCircle className="mr-2 w-4 h-4" /> {doneText}
-        </button>
-      );
-    }
     
     let onClickFn = () => {};
     let Icon = Camera;
@@ -93,14 +85,23 @@ export default function MissionsTab({
     } else if (type === 'pledge') {
       onClickFn = onOpenPledgeModal;
       Icon = CheckSquare;
-      btnText = '서약하기';
+      btnText = isDone ? '서약 내용 보기' : '서약하기';
     } else {
       onClickFn = () => onTriggerCamera(id, title, points, carbon);
     }
     
+    if (isDone && id !== 'pledge') {
+      return (
+        <button disabled className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl text-sm font-bold flex justify-center items-center">
+          <CheckCircle className="mr-2 w-4 h-4" /> 오늘 참여 완료
+        </button>
+      );
+    }
+    
     return (
-      <button onClick={onClickFn} className={`w-full ${btnClass} ${textClass} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center transition-colors cursor-pointer`}>
-        <Icon className="mr-1.5 w-4 h-4" /> {btnText}
+      <button onClick={onClickFn} className={`w-full ${isDone ? 'bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-200' : `${btnClass} ${textClass}`} py-2.5 rounded-xl text-sm font-bold flex justify-center items-center transition-colors cursor-pointer`}>
+        {isDone ? <CheckCircle className="mr-1.5 w-4 h-4 text-rose-500" /> : <Icon className="mr-1.5 w-4 h-4" />} 
+        {isDone && id === 'pledge' ? '서약 완료 ✅ (내용 보기)' : btnText}
       </button>
     );
   };

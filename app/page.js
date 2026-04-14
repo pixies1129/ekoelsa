@@ -101,6 +101,12 @@ export default function Page() {
     try {
       const profile = await api.getUserProfile();
       setUser(profile);
+      
+      if (profile.completedMissions) {
+        setTodayMissions(profile.completedMissions);
+        localStorage.setItem('eko_todayMissions', JSON.stringify(profile.completedMissions));
+      }
+      
       refreshRankings();
     } catch (error) {
       console.error('Profile Load Error:', error);
@@ -131,6 +137,8 @@ export default function Page() {
     }
     sessionStorage.removeItem('eko_token');
     localStorage.removeItem('eko_empId');
+    localStorage.removeItem('eko_todayMissions');
+    setTodayMissions({});
     setUser(null);
     setModals(prev => ({ ...prev, login: true, register: false }));
     setToastMessage('로그아웃 되었습니다.');
@@ -171,7 +179,7 @@ export default function Page() {
 
   const handlePledge = () => {
     if (!user) return;
-    handleMissionComplete({ id: 'pledge', title: '에너지지킴이 서약', points: 50, carbon: 1.0 }, '행동 서약 완료');
+    handleMissionComplete({ id: 'pledge', title: '모두의 에너지지킴이 서약', points: 50, carbon: 1.0 }, '행동 서약 완료');
     setModals(prev => ({ ...prev, pledge: false }));
   };
 
@@ -269,6 +277,7 @@ export default function Page() {
               <PledgeModal 
                 isOpen={modals.pledge}
                 isDone={user?.pledgeDone}
+                userName={user?.userName}
                 onClose={() => setModals(prev => ({ ...prev, pledge: false }))}
                 onConfirm={handlePledge}
               />
