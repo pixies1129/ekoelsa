@@ -7,16 +7,16 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
 
   const getLevelInfo = (currentPoints, type) => {
     const types = {
-      type1: { l1: '🌱', l2: '🌿', l3: '🪴', l4: '🌳' },
-      type2: { l1: '💧', l2: '❄️', l3: '🧊', l4: '🐻‍❄️' },
-      type3: { l1: '🥚', l2: '❄️', l3: '🧊', l4: '🐧' }
+      type1: { l1: '/images/characters/t1_l1.png', l2: '/images/characters/t1_l2.png', l3: '/images/characters/t1_l3.png', l4: '/images/characters/t1_l4.png' },
+      type2: { l1: '/images/characters/t2_l1.png', l2: '/images/characters/t2_l2.png', l3: '/images/characters/t2_l3.png', l4: '/images/characters/t2_l4.png' },
+      type3: { l1: '/images/characters/t3_l1.png', l2: '/images/characters/t3_l2.png', l3: '/images/characters/t3_l3.png', l4: '/images/characters/t3_l4.png' }
     };
-    const emojis = types[type] || types.type1;
+    const images = types[type] || types.type1;
 
-    if (currentPoints < 1000) return { level: 1, name: '(1/3)', emoji: emojis.l1, max: 1000, color: 'text-green-400' };
-    if (currentPoints < 2000) return { level: 2, name: '(2/3)', emoji: emojis.l2, max: 2000, color: 'text-blue-400' };
-    if (currentPoints < 3000) return { level: 3, name: '(3/3)', emoji: emojis.l3, max: 3000, color: 'text-indigo-500' };
-    return { level: 4, name: '성장완료', emoji: emojis.l4, max: 3000, color: 'text-gray-800' };
+    if (currentPoints < 1000) return { level: 1, name: '(1/3)', image: images.l1, max: 1000, color: 'text-green-400' };
+    if (currentPoints < 2000) return { level: 2, name: '(2/3)', image: images.l2, max: 2000, color: 'text-blue-400' };
+    if (currentPoints < 3000) return { level: 3, name: '(3/3)', image: images.l3, max: 3000, color: 'text-indigo-500' };
+    return { level: 4, name: '성장완료', image: images.l4, max: 3000, color: 'text-gray-800' };
   };
 
   const getProgressPercent = () => {
@@ -52,8 +52,13 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
         <div onClick={onOpenCharacterModal} className={`cursor-pointer relative w-32 h-32 sm:w-40 sm:h-40 bg-white flex items-center justify-center border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0 my-auto`} suppressHydrationWarning>
           <div className={`absolute inset-0 rounded-full ${ts.ring} animate-pulse-ring z-[-2]`} suppressHydrationWarning></div>
           {levelInfo.level >= 3 && <div className={`absolute inset-0 ${ts.blob} opacity-60 animate-spin-slow z-[-1]`} style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%' }} suppressHydrationWarning></div>}
-          <span className={`text-5xl sm:text-6xl select-none inline-block ${charAnimation} transition-transform duration-500`} suppressHydrationWarning>{levelInfo.emoji}</span>
-          {levelInfo.level === 4 && <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full shadow z-10" suppressHydrationWarning><Award className="mr-1 w-2.5 h-2.5 sm:w-3 sm:h-3 inline" />완성!</div>}
+          <img 
+            src={levelInfo.image} 
+            alt="character" 
+            className={`w-24 h-24 sm:w-32 sm:h-32 object-contain select-none z-10 ${charAnimation} transition-transform duration-500`} 
+            suppressHydrationWarning 
+          />
+          {levelInfo.level === 4 && <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full shadow z-20" suppressHydrationWarning><Award className="mr-1 w-2.5 h-2.5 sm:w-3 sm:h-3 inline" />완성!</div>}
         </div>
 
         <div className="text-center w-full mt-1" suppressHydrationWarning>

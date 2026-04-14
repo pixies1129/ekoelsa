@@ -9,11 +9,15 @@ export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpI
 
   const isAdmin = currentUserEmpId === '20220055';
 
-  const getLevelEmoji = (points) => {
-    if (points < 1000) return '🌱';
-    if (points < 2000) return '🌿';
-    if (points < 3000) return '🪴';
-    return '🌳';
+  const getLevelImage = (points, charType) => {
+    const type = charType || 'type1';
+    let level = 'l1';
+    if (points >= 3000) level = 'l4';
+    else if (points >= 2000) level = 'l3';
+    else if (points >= 1000) level = 'l2';
+    
+    const typeNum = type.replace('type', '');
+    return `/images/characters/t${typeNum}_${level}.png`;
   };
 
   const handleReset = async (user) => {
@@ -102,7 +106,13 @@ export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpI
                 )}
                 <div className="text-right">
                   <div className="font-bold text-green-600 text-sm">{user.points}P</div>
-                  <div className="text-lg leading-none">{getLevelEmoji(user.points)}</div>
+                  <div className="flex justify-end mt-1">
+                    <img 
+                      src={getLevelImage(user.points, user.charType)} 
+                      alt="character" 
+                      className="w-8 h-8 object-contain" 
+                    />
+                  </div>
                 </div>
               </div>
             </div>

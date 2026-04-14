@@ -11,21 +11,24 @@ export default function CharacterModal({ isOpen, onClose, onSelect }) {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <button 
             onClick={() => onSelect('type1')} 
-            className="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors"
+            className="bg-green-50 border border-green-200 p-2 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors"
           >
-            <span className="text-3xl mb-1">🌳</span><span className="text-xs font-bold text-green-800">나무</span>
+            <img src="/images/characters/t1_l4.png" alt="Tree" className="w-16 h-16 object-contain mb-1" />
+            <span className="text-xs font-bold text-green-800">나무</span>
           </button>
           <button 
             onClick={() => onSelect('type2')} 
-            className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex flex-col items-center hover:bg-blue-100 transition-colors"
+            className="bg-blue-50 border border-blue-200 p-2 rounded-xl flex flex-col items-center hover:bg-blue-100 transition-colors"
           >
-            <span className="text-3xl mb-1">🐻‍❄️</span><span className="text-xs font-bold text-blue-800">북극곰</span>
+            <img src="/images/characters/t2_l4.png" alt="Polar Bear" className="w-16 h-16 object-contain mb-1" />
+            <span className="text-xs font-bold text-blue-800">북극곰</span>
           </button>
           <button 
             onClick={() => onSelect('type3')} 
-            className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex flex-col items-center hover:bg-indigo-100 transition-colors"
+            className="bg-indigo-50 border border-indigo-200 p-2 rounded-xl flex flex-col items-center hover:bg-indigo-100 transition-colors"
           >
-            <span className="text-3xl mb-1">🐧</span><span className="text-xs font-bold text-indigo-800">펭귄</span>
+            <img src="/images/characters/t3_l4.png" alt="Penguin" className="w-16 h-16 object-contain mb-1" />
+            <span className="text-xs font-bold text-indigo-800">펭귄</span>
           </button>
         </div>
         <button 
