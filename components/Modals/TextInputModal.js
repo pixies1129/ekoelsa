@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export default function TextInputModal({ isOpen, onClose, onConfirm, title, description }) {
+export default function TextInputModal({ isOpen, onClose, onSubmit, title, desc }) {
   const [text, setText] = useState('');
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function TextInputModal({ isOpen, onClose, onConfirm, title, desc
 
   const handleSubmit = () => {
     if (text.trim().length > 0) {
-      onConfirm(text.trim());
+      onSubmit(text.trim());
     } else {
       alert('내용을 입력해야 인증이 완료됩니다.');
     }
@@ -25,7 +25,7 @@ export default function TextInputModal({ isOpen, onClose, onConfirm, title, desc
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm px-4">
       <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in">
         <h2 className="text-lg font-bold text-center text-gray-800 mb-2">{title || '인증하기'}</h2>
-        <p className="text-xs text-gray-500 text-center mb-4 whitespace-pre-wrap">{description || '내용을 입력해주세요.'}</p>
+        <p className="text-xs text-gray-500 text-center mb-4 whitespace-pre-wrap">{desc || '내용을 입력해주세요.'}</p>
         <textarea 
           value={text}
           onChange={(e) => setText(e.target.value)}

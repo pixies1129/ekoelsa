@@ -47,11 +47,11 @@ export default function PledgeModal({ isOpen, onClose, onConfirm, isDone = false
         </p>
         
         <div className="flex-1 overflow-y-auto bg-green-50/50 rounded-xl p-4 border border-green-100 text-sm text-gray-700 leading-relaxed mb-5 shadow-inner">
-          <p className="mb-3">
-            기후 변화는 더 이상 먼 미래의 이야기가 아닙니다. 지금 우리가 서 있는 이곳, 일상 속 작은 실천들이 모여 지구의 내일을 바꿀 수 있습니다.
+          <p className="mb-3 font-medium">
+            전 세계적인 <strong className="text-green-700">자원안보위기</strong>와 급격한 기후 변화는 더 이상 먼 미래의 이야기가 아닙니다. 에너지 자립과 지속 가능한 내일을 위해 지금 바로 행동해야 할 때입니다.
           </p>
           <p className="mb-3">
-            나 하나쯤이야 하는 생각보다는 <strong>'나부터 시작하자'</strong>는 마음으로, 한국승강기안전공단 일원으로서 다음 세대에게 깨끗하고 푸른 환경을 물려주기 위해 앞장서겠습니다.
+            나 하나쯤이야 하는 생각보다는 <strong>'나부터 시작하자'</strong>는 마음으로, 한국승강기안전공단 일원으로서 에너지 절약을 생활화하고 깨끗한 환경을 다음 세대에게 물려주기 위해 앞장서겠습니다.
           </p>
           <ul className="list-disc pl-5 space-y-2 font-medium mb-4 text-green-900">
             <li>나는 일회용품 사용을 줄이고, 다회용 컵과 텀블러를 적극 사용하겠습니다.</li>

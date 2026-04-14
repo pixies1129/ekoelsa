@@ -42,27 +42,27 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
   if (levelInfo.level === 4) charAnimation = 'animate-bounce-slow scale-110';
 
   return (
-    <div className="flex flex-col h-full items-center p-3 space-y-3 animate-in">
-      <div className="w-full flex-1 bg-white rounded-xl p-4 shadow-sm border border-green-100 flex flex-col items-center justify-between">
+    <div className="flex flex-col h-full items-center p-3 space-y-3 animate-in" suppressHydrationWarning>
+      <div className="w-full flex-1 bg-white rounded-xl p-4 shadow-sm border border-green-100 flex flex-col items-center justify-between" suppressHydrationWarning>
         <div className="flex justify-between w-full items-center mb-1">
           <h2 className="text-base font-bold text-gray-700">에코 캐릭터</h2>
           <span className="text-[10px] text-gray-400">클릭하여 변경</span>
         </div>
         
-        <div onClick={onOpenCharacterModal} className={`cursor-pointer relative w-32 h-32 sm:w-40 sm:h-40 bg-white flex items-center justify-center border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0 my-auto`}>
-          <div className={`absolute inset-0 rounded-full ${ts.ring} animate-pulse-ring z-[-2]`}></div>
-          {levelInfo.level >= 3 && <div className={`absolute inset-0 ${ts.blob} opacity-60 animate-spin-slow z-[-1]`} style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%' }}></div>}
-          <span className={`text-5xl sm:text-6xl select-none inline-block ${charAnimation} transition-transform duration-500`}>{levelInfo.emoji}</span>
-          {levelInfo.level === 4 && <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full shadow z-10"><Award className="mr-1 w-2.5 h-2.5 sm:w-3 sm:h-3 inline" />완성!</div>}
+        <div onClick={onOpenCharacterModal} className={`cursor-pointer relative w-32 h-32 sm:w-40 sm:h-40 bg-white flex items-center justify-center border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0 my-auto`} suppressHydrationWarning>
+          <div className={`absolute inset-0 rounded-full ${ts.ring} animate-pulse-ring z-[-2]`} suppressHydrationWarning></div>
+          {levelInfo.level >= 3 && <div className={`absolute inset-0 ${ts.blob} opacity-60 animate-spin-slow z-[-1]`} style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%' }} suppressHydrationWarning></div>}
+          <span className={`text-5xl sm:text-6xl select-none inline-block ${charAnimation} transition-transform duration-500`} suppressHydrationWarning>{levelInfo.emoji}</span>
+          {levelInfo.level === 4 && <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full shadow z-10" suppressHydrationWarning><Award className="mr-1 w-2.5 h-2.5 sm:w-3 sm:h-3 inline" />완성!</div>}
         </div>
 
-        <div className="text-center w-full mt-1">
+        <div className="text-center w-full mt-1" suppressHydrationWarning>
           <div className="flex justify-between items-end mb-1.5">
             <span className={`font-bold text-lg ${levelInfo.color}`}>Lv.{levelInfo.level} {levelInfo.name}</span>
             <span className="text-xs text-gray-500">{profile.points} / {levelInfo.level === 4 ? 'MAX' : `${levelInfo.max} P`}</span>
           </div>
-          <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-green-500 transition-all duration-1000 ease-out" style={{ width: `${percent}%` }}></div>
+          <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden" suppressHydrationWarning>
+            <div className="h-full bg-green-500 transition-all duration-1000 ease-out" style={{ width: `${percent}%` }} suppressHydrationWarning></div>
           </div>
         </div>
       </div>

@@ -144,6 +144,26 @@ export default function Page() {
     setToastMessage('로그아웃 되었습니다.');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    const confirmDelete = window.confirm('정말로 탈퇴하시겠습니까?\n모든 미션 내역과 포인트, 탄소저감 기록이 삭제되며 복구할 수 없습니다.');
+    if (!confirmDelete) return;
+
+    try {
+      await api.deleteAccount();
+      sessionStorage.removeItem('eko_token');
+      localStorage.removeItem('eko_empId');
+      localStorage.removeItem('eko_todayMissions');
+      setTodayMissions({});
+      setUser(null);
+      setModals(prev => ({ ...prev, login: true, register: false }));
+      setToastMessage('회원 탈퇴가 완료되었습니다. 그동안 함께해주셔서 감사합니다.');
+    } catch (error) {
+      setToastMessage(error.info?.error || '탈퇴 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleRegisterSuccess = (userName) => {
     setModals(prev => ({ ...prev, register: false, login: true }));
     setToastMessage(`${userName}님, 회원가입 완료! 이제 로그인해주세요.`);
@@ -206,10 +226,10 @@ export default function Page() {
     <div className="w-full max-w-md bg-white app-container sm:rounded-[2.5rem] shadow-2xl relative flex flex-col overflow-hidden sm:border-[6px] sm:border-gray-200" suppressHydrationWarning>
       {mounted ? (
         <>
-          <Header onLogout={handleLogout} />
-          <main className="flex-1 overflow-y-auto pb-6">
+          <Header onLogout={handleLogout} onDeleteAccount={handleDeleteAccount} suppressHydrationWarning />
+          <main className="flex-1 overflow-y-auto pb-6" suppressHydrationWarning>
             {user ? (
-              <>
+              <div suppressHydrationWarning>
                 {activeTab === 'home' && (
                   <HomeTab 
                     profile={user} 
@@ -217,10 +237,11 @@ export default function Page() {
                     onOpenEduModal={() => setModals(prev => ({ ...prev, edu: true }))}
                     missionStats={{
                       completed: Object.entries(todayMissions).filter(([id, date]) => 
-                        id !== 'pledge' && date === new Date().toISOString().split('T')[0]
+                        id !== 'pledge' && id !== 'm8' && date === new Date().toISOString().split('T')[0]
                       ).length,
-                      total: missions.filter(m => m.id !== 'pledge').length
+                      total: missions.filter(m => m.id !== 'pledge' && m.id !== 'm8').length
                     }}
+                    suppressHydrationWarning
                   />
                 )}
                 {activeTab === 'missions' && (
@@ -238,22 +259,24 @@ export default function Page() {
                       setModals(prev => ({ ...prev, textInput: true }));
                     }}
                     onQrClick={() => setToastMessage('폐배터리를 수거하셨다면 담당자에게 신고해 주세요.')}
+                    suppressHydrationWarning
                   />
                 )}
                 {activeTab === 'forest' && (
                   <RankingTab 
                     rankings={rankings}
                     onOpenGrantModal={() => setModals(prev => ({ ...prev, grant: true }))}
+                    suppressHydrationWarning
                   />
                 )}
-              </>
+              </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm" suppressHydrationWarning>
                 로그인이 필요합니다.
               </div>
             )}
           </main>
-          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} suppressHydrationWarning />
           
           <RegisterModal 
             isOpen={modals.register} 
