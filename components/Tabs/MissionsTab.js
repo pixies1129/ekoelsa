@@ -73,7 +73,7 @@ export default function MissionsTab({
       Icon = MessageSquare;
       btnText = customText || '내용 입력 인증';
     } else if (type === 'qr') {
-      onClickFn = onQrClick;
+      onClickFn = () => onQrClick({ id, title });
       Icon = QrCode;
       btnText = customText || 'QR 스캔 방법안내';
     } else if (type === 'pledge') {

@@ -281,7 +281,13 @@ export default function Page() {
                       setPendingTextMission({ id, title, points, carbon });
                       setModals(prev => ({ ...prev, textInput: true }));
                     }}
-                    onQrClick={() => setToastMessage('폐배터리를 수거하셨다면 담당자에게 신고해 주세요.')}
+                    onQrClick={(mission) => {
+                      if (mission.id === 'm9') {
+                        setToastMessage('물품을 기증하셨다면 담당자에게 신고해 주세요.');
+                      } else {
+                        setToastMessage('폐배터리를 수거하셨다면 담당자에게 신고해 주세요.');
+                      }
+                    }}
                     suppressHydrationWarning
                   />
                 )}

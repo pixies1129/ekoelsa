@@ -9,13 +9,6 @@ export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpI
 
   const isAdmin = currentUserEmpId === '20220055';
 
-  const getLevelEmoji = (points) => {
-    if (points < 1000) return '🌱';
-    if (points < 2000) return '🌿';
-    if (points < 3000) return '🪴';
-    return '🌳';
-  };
-
   const handleReset = async (user) => {
     if (!confirm(`${user.userName}님의 포인트와 에너저 절감량을 초기화하시겠습니까?`)) return;
     try {
@@ -104,7 +97,6 @@ export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpI
                 )}
                 <div className="text-right">
                   <div className="font-bold text-green-600 text-sm">{user.points}P</div>
-                  <div className="text-lg leading-none">{getLevelEmoji(user.points)}</div>
                 </div>
               </div>
             </div>

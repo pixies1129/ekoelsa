@@ -4,16 +4,11 @@ import { verifyToken } from '@/lib/auth';
 import { todayMissions } from '@/lib/missions';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
-
 const MISSION_OBJECTS = {
-  m1: '계단 (stairs)',
   m2: '대중교통 (버스 내부, 지하철 내부, 정류장 등)',
   m3: '다회용컵 또는 텀블러 (reusable cup or tumbler)',
   m5: '줍깅/플로깅 활동 (쓰레기를 줍는 모습 또는 집게와 봉투)',
-  m6: '자전거 (bicycle)',
-  m7: '콘센트 (전기 코드 또는 멀티탭)',
-  m10: '컴퓨터 또는 스마트폰의 이메일함 화면',
+  m10: '컴퓨터 또는 스마트폰의 이메일함 화면 (삭제된 메일 또는 비워진 편지함)',
   m12: '에어컨/난방기 리모컨 또는 디스플레이의 온도 표시',
 };
 
@@ -52,45 +47,56 @@ export async function POST(request, { params }) {
 
     // AI 이미지 분석 로직
     if (image && MISSION_OBJECTS[id]) {
-      try {
-        console.log(`[AI] Analyzing image for mission: ${id}`);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        
-        // Base64 데이터 추출 (data:image/jpeg;base64,.... -> ....)
-        const base64Data = image.split(',')[1];
-        
-        const target = MISSION_OBJECTS[id];
-        const prompt = `이 사진에 "${target}"이(가) 포함되어 있는지 확인해줘. 
-        환경 보호 미션 인증 사진이야. 
-        만약 해당 물체가 명확하게 보인다면 오직 "YES"라고만 대답해. 
-        만약 해당 물체가 전혀 보이지 않거나 관련이 없다면 "NO"라고 대답하고 아주 짧은 이유를 한국어로 덧붙여줘.`;
+      const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        console.warn('[AI] Gemini API Key is missing. Bypassing AI verification.');
+      } else {
+        try {
+          console.log(`[AI] Analyzing image for mission: ${id}`);
+          const genAI_instance = new GoogleGenerativeAI(apiKey);
+          const model = genAI_instance.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          
+          const base64Data = image.split(',')[1];
+          const target = MISSION_OBJECTS[id];
+          
+          const prompt = `이 사진은 환경 보호 미션 인증 사진이야.
+          사진 속에 "${target}"이(가) 포함되어 있는지 확인해줘.
+          
+          판단 기준:
+          1. 물체가 식별 가능할 정도로 명확하게 보이는가?
+          2. 해당 미션 주제와 직접적인 연관이 있는가?
+          
+          결과 응답:
+          - 조건에 부합하면 오직 "YES"라고만 대답해.
+          - 조건에 부합하지 않거나 물체를 찾을 수 없다면 "NO"라고 대답하고, 그 이유를 한 문장의 한국어로 짧게 적어줘. (예: "NO 사진이 너무 어두워 계단을 식별할 수 없습니다.")`;
 
-        const result = await model.generateContent([
-          prompt,
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: 'image/jpeg' // 대부분의 브라우저 캡처는 jpeg/png
+          const result = await model.generateContent([
+            prompt,
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: 'image/jpeg'
+              }
             }
+          ]);
+
+          const response = await result.response;
+          const text = response.text().trim();
+          
+          console.log(`[AI] Gemini Response for ${id}: ${text}`);
+
+          if (text.toUpperCase().includes('NO')) {
+            const reason = text.replace(/NO/gi, '').trim() || '미션과 관련 없는 사진으로 판단됩니다.';
+            return NextResponse.json({ 
+              error: `AI 인증 실패: ${reason}`
+            }, { status: 400 });
           }
-        ]);
-
-        const response = await result.response;
-        const text = response.text().trim().toUpperCase();
-        
-        console.log(`[AI] Gemini Response: ${text}`);
-
-        if (!text.startsWith('YES')) {
-          const reason = text.replace('NO', '').trim() || '미션과 관련 없는 사진으로 판단됩니다.';
-          return NextResponse.json({ 
-            error: `AI 인증 실패: ${reason}`,
-            ai_debug: text
-          }, { status: 400 });
+        } catch (aiErr) {
+          console.error('[AI] Gemini Analysis Error:', aiErr);
+          // 서비스 장애 시에는 사용자 경험을 위해 일단 통과 (필요 시 정책 변경 가능)
+          console.log('[AI] AI service error, bypassing verification.');
         }
-      } catch (aiErr) {
-        console.error('[AI] Gemini Analysis Error:', aiErr);
-        // AI 서비스 오류 시 일단 통과시킬지 실패시킬지 결정 필요 (안전을 위해 통과 혹은 로깅 후 성공 처리)
-        console.log('[AI] AI service unavailable, bypassing verification.');
       }
     }
 
