@@ -8,10 +8,17 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
   const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [charType, setCharType] = useState('type1');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  const characters = [
+    { type: 'type1', emoji: '🛢️', name: '원유 방울' },
+    { type: 'type2', emoji: '⚡', name: '스마트 전구' },
+    { type: 'type3', emoji: '🚀', name: '슈퍼 배터리' },
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,14 +37,14 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
     setError('');
 
     try {
-      // 정해진 순서대로 인자 전달: userName, empId, charType, password
-      await api.onboardUser(userName, empId, 'type1', password);
+      await api.onboardUser(userName, empId, charType, password);
       
       // 성공 시 필드 초기화
       setUserName('');
       setEmpId('');
       setPassword('');
       setConfirmPassword('');
+      setCharType('type1');
       
       onRegisterSuccess(userName);
     } catch (err) {
@@ -48,17 +55,37 @@ export default function RegisterModal({ isOpen, onRegisterSuccess, onSwitchToLog
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center backdrop-blur-md px-4">
-      <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-3xl flex items-center justify-center mb-4 shadow-inner">
-            <span className="text-4xl">🌱</span>
-          </div>
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center backdrop-blur-md px-4 overflow-y-auto py-8">
+      <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300 my-auto">
+        <div className="flex flex-col items-center mb-6">
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">회원가입</h1>
-          <p className="text-sm text-gray-500 font-medium mt-1 text-center">EKO-ELSA 탄소중립 실천</p>
+          <p className="text-sm text-gray-500 font-medium mt-1 text-center">함께 시작하는 에너지 절약</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col items-center mb-6">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">나의 에코 캐릭터 선택</label>
+            <div className="flex gap-4">
+              {characters.map((char) => (
+                <button
+                  key={char.type}
+                  type="button"
+                  onClick={() => setCharType(char.type)}
+                  className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all ${
+                    charType === char.type 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-100 bg-gray-50 grayscale opacity-60'
+                  }`}
+                >
+                  <span className="text-3xl mb-1">{char.emoji}</span>
+                  <span className={`text-[10px] font-bold ${charType === char.type ? 'text-green-700' : 'text-gray-400'}`}>
+                    {char.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">이름</label>
             <input 

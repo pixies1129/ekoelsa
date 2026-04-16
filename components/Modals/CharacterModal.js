@@ -11,21 +11,21 @@ export default function CharacterModal({ isOpen, onClose, onSelect }) {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <button 
             onClick={() => onSelect('type1')} 
-            className="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors"
+            className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex flex-col items-center hover:bg-blue-100 transition-colors"
           >
-            <span className="text-3xl mb-1">🌳</span><span className="text-xs font-bold text-green-800">나무</span>
+            <span className="text-3xl mb-1">🛢️</span><span className="text-[10px] font-bold text-blue-800">원유 방울</span>
           </button>
           <button 
             onClick={() => onSelect('type2')} 
-            className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex flex-col items-center hover:bg-blue-100 transition-colors"
+            className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl flex flex-col items-center hover:bg-yellow-100 transition-colors"
           >
-            <span className="text-3xl mb-1">🐻‍❄️</span><span className="text-xs font-bold text-blue-800">북극곰</span>
+            <span className="text-3xl mb-1">⚡</span><span className="text-[10px] font-bold text-yellow-800">스마트 전구</span>
           </button>
           <button 
             onClick={() => onSelect('type3')} 
-            className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex flex-col items-center hover:bg-indigo-100 transition-colors"
+            className="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors"
           >
-            <span className="text-3xl mb-1">🐧</span><span className="text-xs font-bold text-indigo-800">펭귄</span>
+            <span className="text-3xl mb-1">🚀</span><span className="text-[10px] font-bold text-green-800">슈퍼 배터리</span>
           </button>
         </div>
         <button 

@@ -20,7 +20,8 @@ import {
   CupSoda,
   Bus,
   Recycle,
-  Bike
+  Bike,
+  HeartHandshake
 } from 'lucide-react';
 
 export default function MissionsTab({ 
@@ -36,17 +37,19 @@ export default function MissionsTab({
 
   useEffect(() => {
     if (missions && missions.length > 0) {
-      // 1. pledge와 m8 미션 추출 (고정 상단 배치용)
+      // 1. pledge, m8, m9 미션 추출 (고정 상단 배치용)
       const pledge = missions.find(m => m.id === 'pledge');
       const m8 = missions.find(m => m.id === 'm8');
+      const m9 = missions.find(m => m.id === 'm9');
       
       // 2. 나머지 미션들 (원래 순서 유지)
-      const others = missions.filter(m => m.id !== 'pledge' && m.id !== 'm8');
+      const others = missions.filter(m => m.id !== 'pledge' && m.id !== 'm8' && m.id !== 'm9');
       
-      // 3. 고정된 순서로 합치기 [pledge, m8, ...others]
+      // 3. 고정된 순서로 합치기 [pledge, m8, m9, ...others]
       const combined = [];
       if (pledge) combined.push(pledge);
       if (m8) combined.push(m8);
+      if (m9) combined.push(m9);
       combined.push(...others);
       
       setDisplayMissions(combined);
@@ -100,12 +103,10 @@ export default function MissionsTab({
   const missionIcons = {
     pledge: ShieldCheck,
     m8: Battery,
+    m9: HeartHandshake,
     m4: FileText,
-    m1: Footprints,
     m2: Bus,
     m5: Recycle,
-    m6: Bike,
-    m7: Plug,
     m3: Coffee,
     m10: Mail,
     m11: Car,
@@ -116,12 +117,10 @@ export default function MissionsTab({
   const missionColors = {
     pledge: { bg: 'bg-rose-50', text: 'text-rose-600', icon: 'text-rose-500' },
     m8: { bg: 'bg-yellow-50', text: 'text-yellow-700', icon: 'text-yellow-500' },
+    m9: { bg: 'bg-pink-50', text: 'text-pink-600', icon: 'text-pink-500' },
     m4: { bg: 'bg-purple-50', text: 'text-purple-600', icon: 'text-purple-500' },
-    m1: { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'text-blue-500' },
     m2: { bg: 'bg-indigo-50', text: 'text-indigo-600', icon: 'text-indigo-500' },
     m5: { bg: 'bg-teal-50', text: 'text-teal-600', icon: 'text-teal-500' },
-    m6: { bg: 'bg-cyan-50', text: 'text-cyan-600', icon: 'text-cyan-500' },
-    m7: { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' },
     m3: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' },
     m10: { bg: 'bg-emerald-50', text: 'text-emerald-600', icon: 'text-emerald-500' },
     m11: { bg: 'bg-sky-50', text: 'text-sky-600', icon: 'text-sky-500' },
@@ -158,7 +157,9 @@ export default function MissionsTab({
               <p className="text-[14px] text-gray-500 mb-4 px-1">
                 {m.description}
                 {m.id !== 'pledge' && (
-                  <span className="text-green-600 font-medium ml-1.5 whitespace-nowrap">(저감량 : {m.carbon}kg)</span>
+                  <span className="text-green-600 font-medium ml-1.5 whitespace-nowrap">
+                    (탄소저감 {m.carbon}kg으로 원유 {Math.round(m.carbon * 400)}mL 절약)
+                  </span>
                 )}
               </p>
             )}

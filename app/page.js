@@ -213,11 +213,19 @@ export default function Page() {
     setModals(prev => ({ ...prev, pledge: false }));
   };
 
-  const handleGrant = async (targetEmpId, points) => {
+  const handleGrant = async (targetName, points) => {
     if (!user) return;
+    
+    // 이름을 기반으로 사번 찾기
+    const targetUser = rankings.find(r => r.userName === targetName);
+    if (!targetUser) {
+      setToastMessage(`'${targetName}' 사용자를 찾을 수 없습니다. 정확한 이름을 입력해주세요.`);
+      return;
+    }
+
     try {
-      await api.giftPoints(targetEmpId, points);
-      setToastMessage(`${targetEmpId}님에게 ${points}P가 지급되었습니다!`);
+      await api.giftPoints(targetUser.empId, points);
+      setToastMessage(`${targetName}님에게 ${points}P가 지급되었습니다!`);
       setModals(prev => ({ ...prev, grant: false }));
       loadUserProfile();
     } catch (error) {
@@ -227,9 +235,14 @@ export default function Page() {
 
   const handleSelectCharacter = async (type) => {
     if (!user) return;
-    setUser(prev => ({ ...prev, charType: type }));
-    setModals(prev => ({ ...prev, character: false }));
-    setToastMessage('캐릭터가 변경되었습니다.');
+    try {
+      await api.updateProfile({ charType: type });
+      setUser(prev => ({ ...prev, charType: type }));
+      setModals(prev => ({ ...prev, character: false }));
+      setToastMessage('캐릭터가 변경되었습니다.');
+    } catch (error) {
+      setToastMessage(error.info?.error || '캐릭터 변경에 실패했습니다.');
+    }
   };
 
   return (
