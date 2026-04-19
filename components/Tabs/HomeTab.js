@@ -14,8 +14,8 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
     const assets = types[type] || types.type1;
     const isImage = typeof assets.l1 === 'string' && assets.l1.startsWith('/');
 
-    if (currentPoints < 1000) return { level: 1, name: '(1/2)', asset: assets.l1, isImage, max: 1000, color: 'text-blue-400' };
-    if (currentPoints < 2000) return { level: 2, name: '(2/2)', asset: assets.l2, isImage, max: 2000, color: 'text-yellow-500' };
+    if (currentPoints < 1000) return { level: 1, name: '', asset: assets.l1, isImage, max: 1000, color: 'text-blue-400' };
+    if (currentPoints < 2000) return { level: 2, name: '', asset: assets.l2, isImage, max: 2000, color: 'text-yellow-500' };
     return { level: 3, name: '성장완료', asset: assets.l3, isImage, max: 2000, color: 'text-indigo-600' };
   };
 
