@@ -11,21 +11,32 @@ export default function CharacterModal({ isOpen, onClose, onSelect }) {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <button 
             onClick={() => onSelect('type1')} 
-            className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex flex-col items-center hover:bg-blue-100 transition-colors"
+            className="bg-green-50 border border-green-200 p-3 rounded-xl flex flex-col items-center justify-between hover:bg-green-100 transition-all min-h-[110px]"
           >
-            <span className="text-3xl mb-1">🛢️</span><span className="text-[10px] font-bold text-blue-800">원유 방울</span>
+            <div className="flex-1 flex items-center justify-center">
+              <span className="text-4xl">🌳</span>
+            </div>
+            <span className="text-[11px] font-bold text-green-800 mt-2">나무</span>
           </button>
           <button 
             onClick={() => onSelect('type2')} 
-            className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl flex flex-col items-center hover:bg-yellow-100 transition-colors"
+            className="bg-blue-50 border border-blue-200 p-3 rounded-xl flex flex-col items-center justify-between hover:bg-blue-100 transition-all min-h-[110px]"
           >
-            <span className="text-3xl mb-1">⚡</span><span className="text-[10px] font-bold text-yellow-800">스마트 전구</span>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-16 h-16 flex items-center justify-center">
+                <img src="/images/bear03.png" alt="Bear" className="w-full h-full object-contain scale-125" />
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-blue-800 mt-2">북극곰</span>
           </button>
           <button 
             onClick={() => onSelect('type3')} 
-            className="bg-green-50 border border-green-200 p-4 rounded-xl flex flex-col items-center hover:bg-green-100 transition-colors"
+            className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex flex-col items-center justify-between hover:bg-slate-100 transition-all min-h-[110px]"
           >
-            <span className="text-3xl mb-1">🚀</span><span className="text-[10px] font-bold text-green-800">슈퍼 배터리</span>
+            <div className="flex-1 flex items-center justify-center">
+              <span className="text-4xl">🐧</span>
+            </div>
+            <span className="text-[11px] font-bold text-slate-800 mt-2">펭귄</span>
           </button>
         </div>
         <button 

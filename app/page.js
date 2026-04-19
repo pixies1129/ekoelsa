@@ -15,6 +15,7 @@ import EduModal from '@/components/Modals/EduModal';
 import TextInputModal from '@/components/Modals/TextInputModal';
 import GrantModal from '@/components/Modals/GrantModal';
 import LoginModal from '@/components/Modals/LoginModal';
+import InfoModal from '@/components/Modals/InfoModal';
 
 import * as api from '@/lib/api';
 
@@ -34,7 +35,8 @@ export default function Page() {
     pledge: false,
     edu: false,
     textInput: false,
-    grant: false
+    grant: false,
+    info: false
   });
 
   const [pendingTextMission, setPendingTextMission] = useState(null);
@@ -260,9 +262,9 @@ export default function Page() {
                     onOpenEduModal={() => setModals(prev => ({ ...prev, edu: true }))}
                     missionStats={{
                       completed: Object.entries(todayMissions).filter(([id, date]) => 
-                        id !== 'pledge' && id !== 'm8' && date === new Date().toISOString().split('T')[0]
+                        !['pledge', 'm8', 'm9'].includes(id) && date === new Date().toISOString().split('T')[0]
                       ).length,
-                      total: missions.filter(m => m.id !== 'pledge' && m.id !== 'm8').length
+                      total: missions.filter(m => !['pledge', 'm8', 'm9'].includes(m.id)).length
                     }}
                     suppressHydrationWarning
                   />
@@ -295,8 +297,9 @@ export default function Page() {
                   <RankingTab 
                     rankings={rankings}
                     currentUserEmpId={user?.empId}
-                    onRefresh={refreshRankings}
+                    onRefresh={loadUserProfile}
                     onOpenGrantModal={() => setModals(prev => ({ ...prev, grant: true }))}
+                    onOpenInfoModal={() => setModals(prev => ({ ...prev, info: true }))}
                     suppressHydrationWarning
                   />
                 )}
@@ -353,6 +356,10 @@ export default function Page() {
                 isOpen={modals.grant}
                 onClose={() => setModals(prev => ({ ...prev, grant: false }))}
                 onSubmit={handleGrant}
+              />
+              <InfoModal 
+                isOpen={modals.info}
+                onClose={() => setModals(prev => ({ ...prev, info: false }))}
               />
             </>
           )}

@@ -3,7 +3,7 @@
 import { Trophy, Gift, RotateCcw, UserMinus } from 'lucide-react';
 import * as api from '@/lib/api';
 
-export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpId, onRefresh }) {
+export default function RankingTab({ rankings, onOpenGrantModal, onOpenInfoModal, currentUserEmpId, onRefresh }) {
   const safeTotal = rankings.reduce((sum, user) => sum + (user.carbonSaved || 0), 0);
   const equivalentOil = (safeTotal * 0.4).toFixed(1);
 
@@ -33,9 +33,15 @@ export default function RankingTab({ rankings, onOpenGrantModal, currentUserEmpI
 
   return (
     <div className="p-6 space-y-6 animate-in pb-12">
-      <div className="bg-blue-50 rounded-2xl p-5 shadow-sm border border-blue-200 flex items-center justify-between">
+      <div 
+        onClick={onOpenInfoModal}
+        className="bg-blue-50 rounded-2xl p-5 shadow-sm border border-blue-200 flex items-center justify-between cursor-pointer hover:bg-blue-100 transition-all group"
+      >
         <div className="pr-2 flex-1">
-          <h2 className="font-extrabold text-blue-800 text-lg mb-1">수입 원유 절감 효과</h2>
+          <div className="flex items-center mb-1">
+            <h2 className="font-extrabold text-blue-800 text-lg">수입 원유 절감 효과</h2>
+            <span className="ml-2 text-[10px] bg-blue-200 text-blue-700 px-1.5 py-0.5 rounded-md font-bold group-hover:bg-blue-300 transition-colors">상세보기</span>
+          </div>
           <p className="text-[11px] text-blue-600 leading-relaxed mb-3">
             탄소저감 1kg당<br/>
             (약 400mL의 원유 수입 대체 효과 발생)

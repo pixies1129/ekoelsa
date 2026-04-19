@@ -7,15 +7,16 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
 
   const getLevelInfo = (currentPoints, type) => {
     const types = {
-      type1: { l1: '💧', l2: '🧪', l3: '🛢️' }, // 원유 방울 (기름방울, 정제에너지, 드럼통)
-      type2: { l1: '🕯️', l2: '💡', l3: '⚡' }, // 스마트 전구 (촛불, 전구, 고에너지)
-      type3: { l1: '🪫', l2: '🔌', l3: '🚀' }  // 슈퍼 배터리 (저전력, 스마트그리드, 에너지로켓)
+      type1: { l1: '🌱', l2: '🌿', l3: '🌳' }, // 나무 (새싹 -> 작은 나무 -> 큰 나무)
+      type2: { l1: '/images/bear01.png', l2: '/images/bear02.png', l3: '/images/bear03.png' }, // 북극곰 (이미지 1, 2, 3단계)
+      type3: { l1: '🥚', l2: '🐣', l3: '🐧' }  // 펭귄 (알 -> 갓 깬 아기 펭귄 -> 몸 전체 성체 펭귄)
     };
-    const emojis = types[type] || types.type1;
+    const assets = types[type] || types.type1;
+    const isImage = typeof assets.l1 === 'string' && assets.l1.startsWith('/');
 
-    if (currentPoints < 1000) return { level: 1, name: '(1/2)', emoji: emojis.l1, max: 1000, color: 'text-blue-400' };
-    if (currentPoints < 2000) return { level: 2, name: '(2/2)', emoji: emojis.l2, max: 2000, color: 'text-yellow-500' };
-    return { level: 3, name: '성장완료', emoji: emojis.l3, max: 2000, color: 'text-indigo-600' };
+    if (currentPoints < 1000) return { level: 1, name: '(1/2)', asset: assets.l1, isImage, max: 1000, color: 'text-blue-400' };
+    if (currentPoints < 2000) return { level: 2, name: '(2/2)', asset: assets.l2, isImage, max: 2000, color: 'text-yellow-500' };
+    return { level: 3, name: '성장완료', asset: assets.l3, isImage, max: 2000, color: 'text-indigo-600' };
   };
 
   const getProgressPercent = () => {
@@ -43,14 +44,20 @@ export default function HomeTab({ profile, onOpenCharacterModal, onOpenEduModal,
     <div className="flex flex-col h-full items-center p-3 space-y-3 animate-in" suppressHydrationWarning>
       <div className="w-full flex-1 bg-white rounded-xl p-4 shadow-sm border border-green-100 flex flex-col items-center justify-between" suppressHydrationWarning>
         <div className="flex justify-between w-full items-center mb-1">
-          <h2 className="text-base font-bold text-gray-700">에너지 캐릭터</h2>
+          <h2 className="text-base font-bold text-gray-700">에코 캐릭터</h2>
           <span className="text-[10px] text-gray-400">그림을 클릭하여 변경</span>
         </div>
         
         <div onClick={onOpenCharacterModal} className={`cursor-pointer relative w-32 h-32 sm:w-40 sm:h-40 bg-white flex items-center justify-center border-2 border-dashed ${ts.border} rounded-full ${ts.hover} transition-all z-0 my-auto`} suppressHydrationWarning>
           <div className={`absolute inset-0 rounded-full ${ts.ring} animate-pulse-ring z-[-2]`} suppressHydrationWarning></div>
           {levelInfo.level >= 2 && <div className={`absolute inset-0 ${ts.blob} opacity-60 animate-spin-slow z-[-1]`} style={{ borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%' }} suppressHydrationWarning></div>}
-          <span className={`text-5xl sm:text-6xl select-none inline-block ${charAnimation} transition-transform duration-500`} suppressHydrationWarning>{levelInfo.emoji}</span>
+          {levelInfo.isImage ? (
+            <div className={`w-36 h-36 sm:w-52 sm:h-52 overflow-hidden flex items-center justify-center ${charAnimation}`} suppressHydrationWarning>
+              <img src={levelInfo.asset} alt="Character" className="w-full h-full object-contain scale-125" />
+            </div>
+          ) : (
+            <span className={`text-5xl sm:text-6xl select-none inline-block ${charAnimation} transition-transform duration-500`} suppressHydrationWarning>{levelInfo.asset}</span>
+          )}
           {levelInfo.level === 3 && <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full shadow z-10" suppressHydrationWarning><Award className="mr-1 w-2.5 h-2.5 sm:w-3 sm:h-3 inline" />완성!</div>}
         </div>
 
